@@ -4,25 +4,64 @@
 import PackageDescription
 
 let package = Package(
-    name: "ApiFeatures",
-    products: [
-        // Products define the executables and libraries a package produces, and make them visible to other packages.
-        .library(
-            name: "ApiFeatures",
-            targets: ["ApiFeatures"]),
-    ],
-    dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
-    ],
-    targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages this package depends on.
-        .target(
-            name: "ApiFeatures",
-            dependencies: []),
-        .testTarget(
-            name: "ApiFeaturesTests",
-            dependencies: ["ApiFeatures"]),
-    ]
+  name: "ApiFeatures",
+  platforms: [
+    .iOS(.v15),
+    .macOS(.v12),
+  ],
+
+  products: [
+    .library(name: "FlexErrors", targets: ["FlexErrors"]),
+    .library(name: "Listener", targets: ["Listener"]),
+    .library(name: "Objects", targets: ["Objects"]),
+    .library(name: "Tcp", targets: ["Tcp"]),
+    .library(name: "Udp", targets: ["Udp"]),
+  ],
+
+  dependencies: [
+    .package(url: "https://github.com/robbiehanson/CocoaAsyncSocket", from: "7.6.5"),
+    .package(url: "https://github.com/auth0/JWTDecode.swift", from: "2.6.0"),
+    .package(url: "https://github.com/K3TZR/SharedFeatures.git", from: "1.3.1"),
+    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "0.42.0"),
+  ],
+
+  targets: [
+    // --------------- Modules ---------------
+    
+    // FlexErrors
+    .target(name: "FlexErrors",dependencies: [
+      .product(name: "Shared", package: "SharedFeatures"),
+    ]),
+
+    // Listener
+    .target(name: "Listener",dependencies: [
+      .product(name: "CocoaAsyncSocket", package: "CocoaAsyncSocket"),
+      .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      .product(name: "JWTDecode", package: "JWTDecode.swift"),
+      .product(name: "Shared", package: "SharedFeatures"),
+    ]),
+
+    // Objects
+    .target(name: "Objects",dependencies: [
+      .product(name: "Shared", package: "SharedFeatures"),
+      .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      "FlexErrors",
+      "Listener",
+      "Tcp",
+      "Udp",
+    ]),
+    
+    // Tcp
+    .target(name: "Tcp",dependencies: [
+      .product(name: "CocoaAsyncSocket", package: "CocoaAsyncSocket"),
+      .product(name: "Shared", package: "SharedFeatures"),
+    ]),
+    
+    // Udp
+    .target(name: "Udp",dependencies: [
+      .product(name: "CocoaAsyncSocket", package: "CocoaAsyncSocket"),
+      .product(name: "Shared", package: "SharedFeatures"),
+    ]),
+  ]
 )
+
