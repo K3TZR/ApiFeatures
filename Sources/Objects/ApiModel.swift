@@ -41,7 +41,11 @@ public final class ApiModel: ObservableObject {
   // MARK: - Initialization (Singleton)
   
   public static var shared = ApiModel()
-  private init() {}
+  private init() {
+    subscribeToMessages()
+    subscribeToTcpStatus()
+    subscribeToUdpStatus()
+  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
