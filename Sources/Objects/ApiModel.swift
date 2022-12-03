@@ -264,25 +264,25 @@ public final class ApiModel: ObservableObject {
     
     switch type {
     case .amplifier:            Amplifier.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kRemoved))
-    case .atu:                  Task { await MainActor.run { Atu.shared.parse( Array(statusMessage.keyValuesArray().dropFirst(1) )) }}
+    case .atu:                  Atu.shared.parse( Array(statusMessage.keyValuesArray().dropFirst(1) ))
     case .bandSetting:          BandSetting.status(Array(statusMessage.keyValuesArray().dropFirst(1) ), !statusMessage.contains(Shared.kRemoved))
     case .client:               preProcessClient(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kDisconnected))
-    case .cwx:                  Task { await MainActor.run { Cwx.shared.parse( Array(statusMessage.keyValuesArray().dropFirst(1) )) }}
+    case .cwx:                  Cwx.shared.parse( Array(statusMessage.keyValuesArray().dropFirst(1) ))
     case .display:              preProcessDisplay(statusMessage)
     case .equalizer:            Equalizer.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kRemoved))
-    case .gps:                  Task { await MainActor.run { Gps.shared.parse( Array(statusMessage.keyValuesArray(delimiter: "#").dropFirst(1)) ) }}
+    case .gps:                  Gps.shared.parse( Array(statusMessage.keyValuesArray(delimiter: "#").dropFirst(1)) )
     case .interlock:            preProcessInterlock(statusMessage)
     case .memory:               Memory.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kRemoved))
-    case .meter:                Task { await MainActor.run { Meter.status(statusMessage.keyValuesArray(delimiter: "#"), !statusMessage.contains(Shared.kRemoved)) }}
-    case .profile:              Task { await MainActor.run { Profile.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kNotInUse), statusMessage) }}
+    case .meter:                Meter.status(statusMessage.keyValuesArray(delimiter: "#"), !statusMessage.contains(Shared.kRemoved))
+    case .profile:              Profile.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kNotInUse), statusMessage)
     case .radio:                radio?.parse(statusMessage.keyValuesArray())
     case .slice:                Slice.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kNotInUse))
     case .stream:               preProcessStream(statusMessage)
     case .tnf:                  Tnf.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kRemoved))
     case .transmit:             preProcessTransmit(statusMessage)
     case .usbCable:             UsbCable.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kRemoved))
-    case .wan:                  Task { await MainActor.run { Wan.shared.parse( Array(statusMessage.keyValuesArray().dropFirst(1)) ) }}
-    case .waveform:             Task { await MainActor.run { Waveform.shared.parse( Array(statusMessage.keyValuesArray(delimiter: "=").dropFirst(1)) ) }}
+    case .wan:                  Wan.shared.parse( Array(statusMessage.keyValuesArray().dropFirst(1)) )
+    case .waveform:             Waveform.shared.parse( Array(statusMessage.keyValuesArray(delimiter: "=").dropFirst(1)) )
     case .xvtr:                 Xvtr.status(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kNotInUse))
       
     case .panadapter, .waterfall: break                                                   // handled by "display"
@@ -401,7 +401,7 @@ public final class ApiModel: ObservableObject {
     // Band Setting or Interlock?
     switch properties[0].key {
     case ObjectType.bandSetting.rawValue:   BandSetting.status(Array(statusMessage.keyValuesArray().dropFirst()), !statusMessage.contains(Shared.kRemoved) )
-    default:                                Task { await MainActor.run { Interlock.shared.parse(properties) ; interlockStateChange(Interlock.shared.state) }}
+    default:                                Interlock.shared.parse(properties) ; interlockStateChange(Interlock.shared.state)
     }
   }
   
@@ -482,7 +482,7 @@ public final class ApiModel: ObservableObject {
     // Band Setting or Transmit?
     switch properties[0].key {
     case ObjectType.bandSetting.rawValue:   BandSetting.status(Array(statusMessage.keyValuesArray().dropFirst(1) ), !statusMessage.contains(Shared.kRemoved))
-    default:                                Task { await MainActor.run { Transmit.shared.parse( Array(properties.dropFirst() )) }}
+    default:                                Transmit.shared.parse( Array(properties.dropFirst() ))
     }
   }
   
@@ -566,14 +566,14 @@ public final class ApiModel: ObservableObject {
       //      }
       
       // YES, update it
-      Task {
-        await MainActor.run {
+//      Task(priority: .low) {
+//        await MainActor.run {
           Listener.shared.guiClients[id: handle]!.clientId = guiClient.clientId
           Listener.shared.guiClients[id: handle]!.program = guiClient.program
           Listener.shared.guiClients[id: handle]!.station = guiClient.station
           Listener.shared.guiClients[id: handle]!.isLocalPtt = guiClient.isLocalPtt
-        }
-      }
+//        }
+//      }
       
       // log the update if it changed
       log("ApiModel: guiClient UPDATED, \(handle.hex), \(station), \(program), \(clientId)", .info, #function, #file, #line)
@@ -588,8 +588,8 @@ public final class ApiModel: ObservableObject {
                                    clientId: clientId,
                                    isLocalPtt: isLocalPtt,
                                    isThisClient: handle == radio!.connectionHandle)
-      Task {
-        await MainActor.run {
+//      Task(priority: .low) {
+//        await MainActor.run {
           // NO, add it
           Listener.shared.guiClients[id: handle] = newGuiClient
           
@@ -598,8 +598,8 @@ public final class ApiModel: ObservableObject {
           
           // log & notify if all essential properties are present
           Listener.shared.checkCompletion(Listener.shared.guiClients[id: handle]!)
-        }
-      }
+//        }
+//      }
     }
     
   }
@@ -671,7 +671,7 @@ public final class ApiModel: ObservableObject {
 
   /// Process the AsyncStream of inbound TCP messages
   private func subscribeToMessages()  {
-    Task {
+    Task(priority: .low) {
       log("Api: TcpMessage subscription STARTED", .debug, #function, #file, #line)
       for await tcpMessage in Tcp.shared.inboundMessagesStream {
         ApiModel.shared.radio?.tcpInbound(tcpMessage.text)
@@ -682,7 +682,7 @@ public final class ApiModel: ObservableObject {
   
   /// Process the AsyncStream of TCP status changes
   private func subscribeToTcpStatus() {
-    Task {
+    Task(priority: .low) {
       log("Api: TcpStatus subscription STARTED", .debug, #function, #file, #line)
       for await status in Tcp.shared.statusStream {
         ApiModel.shared.radio?.tcpStatus(status)
@@ -693,7 +693,7 @@ public final class ApiModel: ObservableObject {
   
   /// Process the AsyncStream of UDP status changes
   private func subscribeToUdpStatus() {
-    Task {
+    Task(priority: .low) {
       log("Api: UdpStatus subscription STARTED", .debug, #function, #file, #line)
       for await status in Udp.shared.statusStream {
         ApiModel.shared.radio?.udpStatus(status)
