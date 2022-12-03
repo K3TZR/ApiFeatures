@@ -26,47 +26,48 @@ public final class Pinger {
   // MARK: - Publishers
   
   public var pingPublisher = PassthroughSubject<PingStatus, Never>()
-
+  
   // ----------------------------------------------------------------------------
   // MARK: - Private properties
-
+  
   private var _lastPingRxTime: Date!
   private let _pingQ = DispatchQueue(label: "Radio.pingQ")
   private var _pingTimer: DispatchSourceTimer!
   private weak var _radio: Radio?
-
+  
   // ----------------------------------------------------------------------------
   // MARK: - Initialization
-
+  
   public init(pingInterval: Int = 1, pingTimeout: Double = 10) {
     _lastPingRxTime = Date(timeIntervalSinceNow: 0)
-    Task(priority: .background) {
-      await startPinging(interval: pingInterval, timeout: pingTimeout)
-    }
+    //    Task(priority: .background) {
+    //      await startPinging(interval: pingInterval, timeout: pingTimeout)
+    //    }
+    startPinging(interval: pingInterval, timeout: pingTimeout)
   }
-
+  
   // ----------------------------------------------------------------------------
   // MARK: - Public methods
-
+  
   public func stopPinging(reason: String? = nil) {
     _pingTimer?.cancel()
     pingPublisher.send(.stopped(reason))
   }
-
+  
   public func pingReply(_ command: String, seqNum: UInt, responseValue: String, reply: String) {
     _lastPingRxTime = Date()
   }
-
+  
   // ----------------------------------------------------------------------------
   // MARK: - Private methods
-
-  @MainActor private func startPinging(interval: Int, timeout: Double) {
+  
+  private func startPinging(interval: Int, timeout: Double) {
     // create the timer's dispatch source
     _pingTimer = DispatchSource.makeTimerSource(queue: _pingQ)
-
+    
     // Setup the timer
     _pingTimer.schedule(deadline: DispatchTime.now(), repeating: .seconds(interval))
-
+    
     // set the event handler
     _pingTimer.setEventHandler(handler: { [self] in
       // has it been too long since the last response?
@@ -74,17 +75,15 @@ public final class Pinger {
       if interval > timeout {
         // YES, stop the Pinger
         stopPinging(reason: "timeout")
-
+        
       } else {
-        ApiModel.shared.send("ping", replyTo: self.pingReply)
-
-        // NO, ping again
-//        Task {
-//          await MainActor.run(body: { self._radio?.send("ping", replyTo: self.pingReply) } )
-//        }
+        Task(priority: .low) {
+          await MainActor.run { ApiModel.shared.send("ping", replyTo: self.pingReply) }
+        }
       }
-    })
-
+    }
+    )
+    
     // start the timer
     _pingTimer.resume()
   }
