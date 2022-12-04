@@ -25,6 +25,9 @@ public enum ConnectionError: String, Error {
   case wanValidation = "WanValidation Failed"
 }
 
+// ----------------------------------------------------------------------------
+// MARK: - Dependency decalarations
+
 extension ApiModel: DependencyKey {
   public static let liveValue = ApiModel.shared
 }

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import IdentifiedCollections
+import ComposableArchitecture
 import SwiftUI
 
 import Shared
@@ -22,6 +22,20 @@ public class VitaStatus: Identifiable, ObservableObject {
   public init(_ type: Vita.PacketClassCodes)
   {
     self.type = type
+  }
+}
+
+// ----------------------------------------------------------------------------
+// MARK: - Dependency decalarations
+
+extension StreamModel: DependencyKey {
+  public static let liveValue = StreamModel.shared
+}
+
+extension DependencyValues {
+  var streamModel: StreamModel {
+    get { self[StreamModel.self] }
+    set { self[StreamModel.self] = newValue }
   }
 }
 
