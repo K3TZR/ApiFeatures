@@ -33,7 +33,7 @@ extension StreamModel: DependencyKey {
 }
 
 extension DependencyValues {
-  var streamModel: StreamModel {
+  public var streamModel: StreamModel {
     get { self[StreamModel.self] }
     set { self[StreamModel.self] = newValue }
   }
