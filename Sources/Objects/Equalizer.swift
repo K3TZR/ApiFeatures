@@ -10,6 +10,11 @@ import Foundation
 
 import Shared
 
+public enum EqType: String {
+  case rx = "rxsc"
+  case tx = "txsc"
+}
+
 // Equalizer
 //      Added, removed and updated by the incoming TCP messages.
 //      Collected in the ApiModel.equalizers collection.
