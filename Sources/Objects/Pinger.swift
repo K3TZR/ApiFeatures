@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import Combine
+//import Combine
+import ComposableArchitecture
 
 import Shared
 
@@ -25,7 +26,7 @@ public final class Pinger {
   // ----------------------------------------------------------------------------
   // MARK: - Publishers
   
-  public var pingPublisher = PassthroughSubject<PingStatus, Never>()
+//  public var pingPublisher = PassthroughSubject<PingStatus, Never>()
   
   // ----------------------------------------------------------------------------
   // MARK: - Private properties
@@ -46,12 +47,14 @@ public final class Pinger {
     startPinging(interval: pingInterval, timeout: pingTimeout)
   }
   
+  @Dependency(\.apiModel) var apiModel
+  
   // ----------------------------------------------------------------------------
   // MARK: - Public methods
   
   public func stopPinging(reason: String? = nil) {
     _pingTimer?.cancel()
-    pingPublisher.send(.stopped(reason))
+//    pingPublisher.send(.stopped(reason))
   }
   
   public func pingReply(_ command: String, seqNum: UInt, responseValue: String, reply: String) {
@@ -78,7 +81,7 @@ public final class Pinger {
         
       } else {
         Task(priority: .low) {
-          await MainActor.run { ApiModel.shared.send("ping", replyTo: self.pingReply) }
+          await MainActor.run { apiModel.send("ping", replyTo: self.pingReply) }
         }
       }
     }

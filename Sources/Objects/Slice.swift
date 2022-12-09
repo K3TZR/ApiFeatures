@@ -5,7 +5,9 @@
 //  Created by Douglas Adams on 7/11/22.
 //
 
+import ComposableArchitecture
 import Foundation
+
 import Shared
 
 @MainActor
@@ -18,6 +20,8 @@ public final class Slice: Identifiable, ObservableObject {
     // set filterLow & filterHigh to default values
     setupDefaultFilters(mode)
   }
+  
+  @Dependency(\.apiModel) var apiModel
 
   // ----------------------------------------------------------------------------
   // MARK: - Published properties
@@ -117,23 +121,23 @@ public final class Slice: Identifiable, ObservableObject {
 /// - Parameters:
 ///   - properties: properties in KeyValuesArray form
 ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-    // get the id
-    if let id = properties[0].key.objectId {
-      // is it in use?
-      if inUse {
-        // YES, add it if not already present
-        if ApiModel.shared.slices[id: id] == nil { ApiModel.shared.slices.append( Slice(id) ) }
-        // parse the properties
-        ApiModel.shared.slices[id: id]!.parse( Array(properties.dropFirst(1)) )
-        
-      } else {
-        // NO, remove it
-        ApiModel.shared.slices.remove(id: id)
-        log("Slice \(id): REMOVED", .debug, #function, #file, #line)
-      }
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
+//    // get the id
+//    if let id = properties[0].key.objectId {
+//      // is it in use?
+//      if inUse {
+//        // YES, add it if not already present
+//        if ApiModel.shared.slices[id: id] == nil { ApiModel.shared.slices.append( Slice(id) ) }
+//        // parse the properties
+//        ApiModel.shared.slices[id: id]!.parse( Array(properties.dropFirst(1)) )
+//        
+//      } else {
+//        // NO, remove it
+//        ApiModel.shared.slices.remove(id: id)
+//        log("Slice \(id): REMOVED", .debug, #function, #file, #line)
+//      }
+//    }
+//  }
 
 // ----------------------------------------------------------------------------
 // MARK: - Public Instance methods
@@ -152,7 +156,7 @@ public final class Slice: Identifiable, ObservableObject {
       // Known keys, in alphabetical order
       switch token {
         
-      case .active:                   active = property.value.bValue ; ApiModel.shared.activeSlice = self
+      case .active:                   active = property.value.bValue ; apiModel.activeSlice = self
       case .agcMode:                  agcMode = property.value
       case .agcOffLevel:              agcOffLevel = property.value.iValue
       case .agcThreshold:             agcThreshold = property.value.dValue
@@ -170,7 +174,7 @@ public final class Slice: Identifiable, ObservableObject {
           // remove this slice from the AudioStream it was using
           //          if let daxRxAudioStream = radio.findDaxRxAudioStream(with: daxChannel) { daxRxAudioStream.slice = nil }
         }
-        ApiModel.shared.slices[id: id]!.daxChannel = property.value.iValue
+        apiModel.slices[id: id]!.daxChannel = property.value.iValue
       case .daxTxEnabled:             daxTxEnabled = property.value.bValue
       case .detached:                 detached = property.value.bValue
       case .dfmPreDeEmphasisEnabled:  dfmPreDeEmphasisEnabled = property.value.bValue
@@ -239,7 +243,7 @@ public final class Slice: Identifiable, ObservableObject {
     if initialized == false && panadapterId != 0 && frequency != 0 && mode != "" {
       // NO, it is now
       initialized = true
-      log("Slice \(id): ADDED, frequency = \( ApiModel.shared.slices[id: id]!.frequency), panadapter = \( ApiModel.shared.slices[id: id]!.panadapterId.hex)", .debug, #function, #file, #line)
+      log("Slice \(id): ADDED, frequency = \( apiModel.slices[id: id]!.frequency), panadapter = \( apiModel.slices[id: id]!.panadapterId.hex)", .debug, #function, #file, #line)
     }
   }
 

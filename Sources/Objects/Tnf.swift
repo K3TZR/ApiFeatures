@@ -53,23 +53,23 @@ public final class Tnf: Identifiable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-    // get the id
-    if let id = UInt32(properties[0].key, radix: 10) {
-      // is it in use?
-      if inUse {
-        // YES, add it if not already present
-        if ApiModel.shared.tnfs[id: id] == nil { ApiModel.shared.tnfs.append( Tnf(id) ) }
-        // parse the properties
-        ApiModel.shared.tnfs[id: id]!.parse( Array(properties.dropFirst(1)) )
-        
-      } else {
-        // NO, remove it
-        ApiModel.shared.tnfs.remove(id: id)
-        log("Tnf \(id): REMOVED", .debug, #function, #file, #line)
-      }
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
+//    // get the id
+//    if let id = UInt32(properties[0].key, radix: 10) {
+//      // is it in use?
+//      if inUse {
+//        // YES, add it if not already present
+//        if ApiModel.shared.tnfs[id: id] == nil { ApiModel.shared.tnfs.append( Tnf(id) ) }
+//        // parse the properties
+//        ApiModel.shared.tnfs[id: id]!.parse( Array(properties.dropFirst(1)) )
+//        
+//      } else {
+//        // NO, remove it
+//        ApiModel.shared.tnfs.remove(id: id)
+//        log("Tnf \(id): REMOVED", .debug, #function, #file, #line)
+//      }
+//    }
+//  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

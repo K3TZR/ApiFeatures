@@ -4,6 +4,8 @@
 //
 //  Created by Douglas Adams on 9/22/22.
 //
+
+import ComposableArchitecture
 import Foundation
 
 import Shared
@@ -15,6 +17,9 @@ public final class PanadapterStream: Identifiable {
   public init(_ id: PanadapterId) {
     self.id = id
   }
+  
+  @Dependency(\.streamModel) var streamModel
+  @Dependency(\.apiModel) var apiModel
 
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -58,9 +63,7 @@ public final class PanadapterStream: Identifiable {
       // log the start of the stream
       log("Panadapter \(vita.streamId.hex) stream: STARTED", .info, #function, #file, #line)
       
-      Task {
-        await ApiModel.shared.panadapters[id: vita.streamId]?.setIsStreaming()
-      }
+      Task { await MainActor.run {  apiModel.panadapters[id: vita.streamId]?.setIsStreaming() }}
     }
     
     // Bins are just beyond the payload
@@ -97,9 +100,9 @@ public final class PanadapterStream: Identifiable {
         log("Panadapter: missing frame(s), expected = \(_expectedFrameNumber), received = \(_frames[_index].frameNumber), acccumulatedBins = \(_accumulatedBins), frameBinCount = \(_frames[_index].frameBinCount)", .debug, #function, #file, #line)
         _expectedFrameNumber = -1
         _accumulatedBins = 0
-        Task {
-          await MainActor.run { StreamModel.shared.streamStatus[id: vita.classCode]?.errors += 1 }
-        }
+        
+        Task { await MainActor.run { streamModel.streamStatus[id: vita.classCode]?.errors += 1 }}
+        
         return
       }
       vita.payloadData.withUnsafeBytes { ptr in

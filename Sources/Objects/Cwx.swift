@@ -20,8 +20,8 @@ public final class Cwx: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (singleton)
 
-  public static var shared = Cwx()
-  private init() {
+//  public static var shared = Cwx()
+  public init() {
     macros = [String](repeating: "", count: kMaxNumberOfMacros)
   }
   

@@ -25,11 +25,26 @@ public class VitaStatus: Identifiable, ObservableObject {
   }
 }
 
+public enum Units: String {
+  case none
+  case amps
+  case db
+  case dbfs
+  case dbm
+  case degc
+  case degf
+  case percent
+  case rpm
+  case swr
+  case volts
+  case watts
+}
+
 // ----------------------------------------------------------------------------
 // MARK: - Dependency decalarations
 
 extension StreamModel: DependencyKey {
-  public static let liveValue = StreamModel.shared
+  public static let liveValue = StreamModel()
 }
 
 extension DependencyValues {
@@ -43,8 +58,8 @@ public final class StreamModel: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (Singleton)
   
-  public static var shared = StreamModel()
-  private init() {
+//  public static var shared = StreamModel()
+  public init() {
     streamStatus[id: Vita.PacketClassCodes.daxIq24] = VitaStatus(Vita.PacketClassCodes.daxIq24)
     streamStatus[id: Vita.PacketClassCodes.daxIq48] = VitaStatus(Vita.PacketClassCodes.daxIq48)
     streamStatus[id: Vita.PacketClassCodes.daxIq96] = VitaStatus(Vita.PacketClassCodes.daxIq96)
@@ -58,6 +73,8 @@ public final class StreamModel: ObservableObject {
     
     subscribeToStreams()
   }
+  
+  @Dependency(\.apiModel) var apiModel
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -108,6 +125,80 @@ public final class StreamModel: ObservableObject {
     }
   }
   
+  public func preProcessStream(_ statusMessage: String) {
+    enum Property: String {
+      case daxIq            = "dax_iq"
+      case daxMic           = "dax_mic"
+      case daxRx            = "dax_rx"
+      case daxTx            = "dax_tx"
+      case remoteRx         = "remote_audio_rx"
+      case remoteTx         = "remote_audio_tx"
+    }
+    
+    let properties = statusMessage.keyValuesArray()
+    
+    // is the 1st KeyValue a StreamId?
+    if let id = properties[0].key.streamId {
+      
+      // is it a removal?
+      if statusMessage.contains(Shared.kRemoved) {
+        // REMOVAL, what type of stream?
+        if daxIqStreams[id: id] != nil {
+          daxIqStreams.remove(id: id)
+          log("DaxIqStream \(id.hex): REMOVED", .debug, #function, #file, #line)
+          
+        } else if daxMicAudioStreams[id: id] != nil {
+          daxMicAudioStreams.remove(id: id)
+          log("DaxMicAudioStream \(id.hex): REMOVED", .debug, #function, #file, #line)
+          
+        } else if daxRxAudioStreams[id: id] != nil {
+          daxRxAudioStreams.remove(id: id)
+          log("DaxRxAudioStream \(id.hex): REMOVED", .debug, #function, #file, #line)
+          
+        } else if daxTxAudioStreams[id: id] != nil {
+          daxTxAudioStreams.remove(id: id)
+          log("DaxTxAudioStream \(id.hex): REMOVED", .debug, #function, #file, #line)
+          
+        } else if remoteRxAudioStreams[id: id] != nil {
+          remoteRxAudioStreams.remove(id: id)
+          log("RemoteRxAudioStream \(id.hex): REMOVED", .debug, #function, #file, #line)
+          
+        } else if remoteTxAudioStreams[id: id] != nil {
+          remoteTxAudioStreams.remove(id: id)
+          log("RemoteTxAudioStream \(id.hex): REMOVED", .debug, #function, #file, #line)
+        }
+        
+      } else {
+        Task {
+          // NORMAL STATUS, is it for me?
+          if await apiModel.isForThisClient(properties) {
+            // YES
+            guard properties.count > 1 else {
+              log("ApiModel: invalid Stream message: \(statusMessage)", .warning, #function, #file, #line)
+              return
+            }
+            guard let token = Property(rawValue: properties[1].value) else {
+              // log it and ignore the Key
+              log("ApiModel: unknown Stream type: \(properties[1].value)", .warning, #function, #file, #line)
+              return
+            }
+            switch token {
+              
+            case .daxIq:      daxIqStreamStatus(properties)
+            case .daxMic:     daxMicAudioStreamStatus(properties)
+            case .daxRx:      daxRxAudioStreamStatus(properties)
+            case .daxTx:      daxTxAudioStreamStatus(properties)
+            case .remoteRx:   remoteRxAudioStreamStatus(properties)
+            case .remoteTx:   remoteTxAudioStreamStatus(properties)
+            }
+          }
+        }
+      }
+    } else {
+      log("ApiModel: invalid Stream message: \(statusMessage)", .warning, #function, #file, #line)
+    }
+  }
+
   // ----------------------------------------------------------------------------
   // MARK: - Internal methods
   
@@ -116,9 +207,30 @@ public final class StreamModel: ObservableObject {
   func sendRemoveStream(id: StreamId) {
     // tell the Radio to remove the stream
     Task {
-      await ApiModel.shared.radio?.send("stream remove \(id.hex)")
+      await apiModel.radio?.send("stream remove \(id.hex)")
     }
   }
+
+  /// Determine if status is for this client
+  /// - Parameters:
+  ///   - properties:     a KeyValuesArray
+  ///   - clientHandle:   the handle of ???
+  /// - Returns:          true if a mtch
+//  func isForThisClient(_ properties: KeyValuesArray) -> Bool {
+//    var clientHandle : Handle = 0
+//
+//    guard connectionHandle != nil else { return false }
+//
+//    // FIXME: probably not needed
+//    // allow a Tester app to see all Streams
+////    guard _testerMode == false else { return true }
+//
+//    // find the handle property
+//    for property in properties.dropFirst(2) where property.key == "client_handle" {
+//      clientHandle = property.value.handle ?? 0
+//    }
+//    return clientHandle == connectionHandle
+//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Private methods (streams)
@@ -129,30 +241,30 @@ public final class StreamModel: ObservableObject {
     }
     switch vita.classCode {
     case .panadapter:
-      if let object = StreamModel.shared.panadapterStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = panadapterStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     case .waterfall:
-      if let object = StreamModel.shared.waterfallStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = waterfallStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     case .daxIq24, .daxIq48, .daxIq96, .daxIq192:
-      if let object = StreamModel.shared.daxIqStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = daxIqStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     case .daxAudio:
-      if let object = StreamModel.shared.daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita)}
-      if let object = StreamModel.shared.daxMicAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
-      if let object = StreamModel.shared.remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita)}
+      if let object = daxMicAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     case .daxReducedBw:
-      if let object = StreamModel.shared.daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
-      if let object = StreamModel.shared.daxMicAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = daxMicAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     case .meter:
       Task {
-        await Meter.vitaProcessor(vita)
+        await MainActor.run { apiModel.meterVitaProcessor(vita) }
       }
       
     case .opus:
-      if let object = StreamModel.shared.remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     default:
       // log the error
@@ -170,6 +282,80 @@ public final class StreamModel: ObservableObject {
       log("Api: UDP stream  subscription STOPPED", .debug, #function, #file, #line)
     }
   }
+
+  
+
+  
+  
+
+  /// Evaluate a Status messaage
+  /// - Parameters:
+  ///   - properties: properties in KeyValuesArray form
+  ///   - inUse: bool indicating status
+  private func daxIqStreamStatus(_ properties: KeyValuesArray) {
+    // get the id
+    if let id = properties[0].key.streamId {
+      // add it if not already present
+      if daxIqStreams[id: id] == nil { daxIqStreams.append( DaxIqStream(id) ) }
+      // parse the properties
+      daxIqStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
+    }
+  }
+
+  private func daxMicAudioStreamStatus(_ properties: KeyValuesArray) {
+    // get the id
+    if let id = properties[0].key.streamId {
+      // add it if not already present
+      if daxMicAudioStreams[id: id] == nil { daxMicAudioStreams.append( DaxMicAudioStream(id) ) }
+      // parse the properties
+      daxMicAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
+    }
+  }
+
+  private func daxTxAudioStreamStatus(_ properties: KeyValuesArray) {
+    // get the id
+    if let id = properties[0].key.streamId {
+      // add it if not already present
+      if daxTxAudioStreams[id: id] == nil { daxTxAudioStreams.append( DaxTxAudioStream(id) ) }
+      // parse the properties
+      daxTxAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
+    }
+  }
+
+  private func daxRxAudioStreamStatus(_ properties: KeyValuesArray) {
+    // get the id
+    if let id = properties[0].key.streamId {
+      // add it if not already present
+      if daxRxAudioStreams[id: id] == nil { daxRxAudioStreams.append( DaxRxAudioStream(id) ) }
+      // parse the properties
+      daxRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
+    }
+  }
+
+  private func remoteRxAudioStreamStatus(_ properties: KeyValuesArray) {
+    // get the id
+    if let id = properties[0].key.streamId {
+      // add it if not already present
+      if remoteRxAudioStreams[id: id] == nil { remoteRxAudioStreams.append( RemoteRxAudioStream(id) ) }
+      // parse the properties
+      remoteRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
+    }
+  }
+
+  private func remoteTxAudioStreamStatus(_ properties: KeyValuesArray) {
+    // get the id
+    if let id = properties[0].key.streamId {
+      // add it if not already present
+      if remoteTxAudioStreams[id: id] == nil { remoteTxAudioStreams.append( RemoteTxAudioStream(id) ) }
+      // parse the properties
+      remoteTxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
+    }
+  }
+
+  
+  
+  
+  
   
   /*
    "stream set 0x" + _streamId.ToString("X") + " daxiq_rate=" + _sampleRate

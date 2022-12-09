@@ -61,23 +61,23 @@ public final class Xvtr: Identifiable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-    // get the id
-    if let id = properties[1].key.streamId {
-      // is it in use?
-      if inUse {
-        // YES, add it if not already present
-        if ApiModel.shared.xvtrs[id: id] == nil { ApiModel.shared.xvtrs.append( Xvtr(id) ) }
-        // parse the properties
-        ApiModel.shared.xvtrs[id: id]!.parse( Array(properties.dropFirst(1)) )
-        
-      } else {
-        // NO, remove it
-        ApiModel.shared.xvtrs.remove(id: id)
-        log("Xvtr \(id): REMOVED", .debug, #function, #file, #line)
-      }
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
+//    // get the id
+//    if let id = properties[1].key.streamId {
+//      // is it in use?
+//      if inUse {
+//        // YES, add it if not already present
+//        if ApiModel.shared.xvtrs[id: id] == nil { ApiModel.shared.xvtrs.append( Xvtr(id) ) }
+//        // parse the properties
+//        ApiModel.shared.xvtrs[id: id]!.parse( Array(properties.dropFirst(1)) )
+//        
+//      } else {
+//        // NO, remove it
+//        ApiModel.shared.xvtrs.remove(id: id)
+//        log("Xvtr \(id): REMOVED", .debug, #function, #file, #line)
+//      }
+//    }
+//  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

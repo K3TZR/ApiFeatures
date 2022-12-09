@@ -65,15 +65,15 @@ public final class DaxRxAudioStream: Identifiable, Equatable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray) {
-    // get the id
-    if let id = properties[0].key.streamId {
-      // add it if not already present
-      if StreamModel.shared.daxRxAudioStreams[id: id] == nil { StreamModel.shared.daxRxAudioStreams.append( DaxRxAudioStream(id) ) }
-      // parse the properties
-      StreamModel.shared.daxRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray) {
+//    // get the id
+//    if let id = properties[0].key.streamId {
+//      // add it if not already present
+//      if streamModel.daxRxAudioStreams[id: id] == nil { streamModel.daxRxAudioStreams.append( DaxRxAudioStream(id) ) }
+//      // parse the properties
+//      streamModel.daxRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
+//    }
+//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

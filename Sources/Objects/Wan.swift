@@ -19,8 +19,8 @@ public final class Wan: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (singleton)
 
-  public static var shared = Wan()
-  private init() {}
+//  public static var shared = Wan()
+  public init() {}
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties

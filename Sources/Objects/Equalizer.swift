@@ -6,6 +6,7 @@
 //  Copyright (c) 2015 Douglas Adams, K3TZR
 //
 
+import ComposableArchitecture
 import Foundation
 
 import Shared
@@ -38,6 +39,8 @@ public final class Equalizer: Identifiable, ObservableObject {
   // MARK: - Initialization
   
   public init(_ id: EqualizerId) { self.id = id }
+  
+  @Dependency(\.apiModel) var apiModel
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -87,11 +90,12 @@ public final class Equalizer: Identifiable, ObservableObject {
   /// - Parameters:
   ///   - property: property to set (Must use the 63Hz format tokens)
   ///   - value: a new value
-  public func setEqProperty(_ token: Property, _ value: Any) {
+  public func setEqProperty(_ token: Property, _ value: Any = 0) {
+    
     // this guarantees that the "Hz63" form is used in commands to the Radio
     switch token {
       
-    case .eqEnabled:        eqEnabled = value as! Bool ; equalizerCmd(.eqEnabled, "=", value as! Bool)
+    case .eqEnabled:        eqEnabled.toggle() ; equalizerCmd(.eqEnabled, "=", eqEnabled)
     case .hz63, .Hz63:      hz63 = value as! Int ; equalizerCmd(.Hz63, "=", value)
     case .hz125, .Hz125:    hz125 = value as! Int ; equalizerCmd(.Hz125, "=", value)
     case .hz250, .Hz250:    hz250 = value as! Int ; equalizerCmd(.Hz250, "=", value)
@@ -113,9 +117,9 @@ public final class Equalizer: Identifiable, ObservableObject {
   ///   - value:      the new value
   private func equalizerCmd(_ token: Property, _ separator: String, _ value: Any) {
     if let isBool = value as? Bool {
-      ApiModel.shared.send("eq " + id + " " + token.rawValue + separator + "\(isBool.as1or0)")
+      apiModel.send("eq " + id + " " + token.rawValue + separator + "\(isBool.as1or0)")
     } else {
-      ApiModel.shared.send("eq " + id + " " + token.rawValue + separator + "\(value)")
+      apiModel.send("eq " + id + " " + token.rawValue + separator + "\(value)")
     }
   }
   
@@ -143,23 +147,23 @@ public final class Equalizer: Identifiable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-    // get the id
-    let id = properties[0].key
-    if id == "tx" || id == "rx" { return } // legacy equalizer ids, ignore
-    // is it in use?
-    if inUse {
-      // YES, add it if not already present
-      if ApiModel.shared.equalizers[id: id] == nil { ApiModel.shared.equalizers.append( Equalizer(id) ) }
-      // parse the properties
-      ApiModel.shared.equalizers[id: id]!.parse( Array(properties.dropFirst(1)) )
-
-    } else {
-      // NO, remove it
-      ApiModel.shared.equalizers.remove(id: id)
-      log("Equalizer \(id): REMOVED", .debug, #function, #file, #line)
-    }
-  }
+//  static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
+//    // get the id
+//    let id = properties[0].key
+//    if id == "tx" || id == "rx" { return } // legacy equalizer ids, ignore
+//    // is it in use?
+//    if inUse {
+//      // YES, add it if not already present
+//      if ApiModel.shared.equalizers[id: id] == nil { ApiModel.shared.equalizers.append( Equalizer(id) ) }
+//      // parse the properties
+//      ApiModel.shared.equalizers[id: id]!.parse( Array(properties.dropFirst(1)) )
+//
+//    } else {
+//      // NO, remove it
+//      ApiModel.shared.equalizers.remove(id: id)
+//      log("Equalizer \(id): REMOVED", .debug, #function, #file, #line)
+//    }
+//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

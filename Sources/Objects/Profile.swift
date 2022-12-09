@@ -6,6 +6,7 @@
 //  Copyright © 2017 Douglas Adams. All rights reserved.
 //
 
+import ComposableArchitecture
 import Foundation
 
 import Shared
@@ -26,6 +27,8 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   // MARK: - Initialization
   
   public init(_ id: ProfileId) { self.id = id }
+  
+  @Dependency(\.apiModel) var apiModel
 
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -48,22 +51,22 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray, _ inUse: Bool, _ statusMessage: String) {
-    // get the id
-    let id = properties[0].key
-    // is it in use?
-    if inUse {
-      // YES, add it if not already present
-      if ApiModel.shared.profiles[id: id] == nil { ApiModel.shared.profiles.append( Profile(id) ) }
-      // parse the properties
-      ApiModel.shared.profiles[id: id]!.parse( statusMessage )
-      
-    } else {
-      // NO, remove it
-      ApiModel.shared.profiles.remove(id: id)
-      log("Profile \(id): REMOVED", .debug, #function, #file, #line)
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool, _ statusMessage: String) {
+//    // get the id
+//    let id = properties[0].key
+//    // is it in use?
+//    if inUse {
+//      // YES, add it if not already present
+//      if ApiModel.shared.profiles[id: id] == nil { ApiModel.shared.profiles.append( Profile(id) ) }
+//      // parse the properties
+//      ApiModel.shared.profiles[id: id]!.parse( statusMessage )
+//      
+//    } else {
+//      // NO, remove it
+//      ApiModel.shared.profiles.remove(id: id)
+//      log("Profile \(id): REMOVED", .debug, #function, #file, #line)
+//    }
+//  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
@@ -107,12 +110,12 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
     // FIXME: add commands
   }
 
-  public static func getProperty( _ id: ProfileId, property: Property) -> Any? {
-    switch property {
-    case .list:         return ApiModel.shared.profiles[id: id]!.list as Any
-    case .current:      return ApiModel.shared.profiles[id: id]!.current as Any
-    }
-  }
+//  public static func getProperty( _ id: ProfileId, property: Property) -> Any? {
+//    switch property {
+//    case .list:         return apiModel.profiles[id: id]!.list as Any
+//    case .current:      return apiModel.profiles[id: id]!.current as Any
+//    }
+//  }
 
   /// Send a command to Set a Profile property
   /// - Parameters:

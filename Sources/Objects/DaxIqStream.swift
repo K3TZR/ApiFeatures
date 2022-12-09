@@ -72,15 +72,15 @@ public final class DaxIqStream: Identifiable, Equatable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray) {
-    // get the id
-    if let id = properties[0].key.streamId {
-      // add it if not already present
-      if StreamModel.shared.daxIqStreams[id: id] == nil { StreamModel.shared.daxIqStreams.append( DaxIqStream(id) ) }
-      // parse the properties
-      StreamModel.shared.daxIqStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray) {
+//    // get the id
+//    if let id = properties[0].key.streamId {
+//      // add it if not already present
+//      if streamModel.daxIqStreams[id: id] == nil { streamModel.daxIqStreams.append( DaxIqStream(id) ) }
+//      // parse the properties
+//      streamModel.daxIqStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
+//    }
+//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

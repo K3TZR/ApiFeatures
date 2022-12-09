@@ -21,8 +21,8 @@ public final class Waveform: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (singleton)
 
-  public static var shared = Waveform()
-  private init() {}
+//  public static var shared = Waveform()
+  public init() {}
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties

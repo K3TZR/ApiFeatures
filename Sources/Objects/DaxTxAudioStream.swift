@@ -6,6 +6,7 @@
 //  Copyright © 2017 Douglas Adams & Mario Illgen. All rights reserved.
 //
 
+import ComposableArchitecture
 import Foundation
 
 import Shared
@@ -27,6 +28,8 @@ public final class DaxTxAudioStream: Identifiable, Equatable, ObservableObject {
   // MARK: - Initialization
   
   public init(_ id: DaxTxAudioStreamId) { self.id = id  }
+  
+  @Dependency(\.streamModel) var streamModel
   
   // ------------------------------------------------------------------------------
   // MARK: - Public properties
@@ -71,15 +74,15 @@ public final class DaxTxAudioStream: Identifiable, Equatable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray) {
-    // get the id
-    if let id = properties[0].key.streamId {
-      // add it if not already present
-      if StreamModel.shared.daxTxAudioStreams[id: id] == nil { StreamModel.shared.daxTxAudioStreams.append( DaxTxAudioStream(id) ) }
-      // parse the properties
-      StreamModel.shared.daxTxAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray) {
+//    // get the id
+//    if let id = properties[0].key.streamId {
+//      // add it if not already present
+//      if streamModel.daxTxAudioStreams[id: id] == nil { streamModel.daxTxAudioStreams.append( DaxTxAudioStream(id) ) }
+//      // parse the properties
+//      streamModel.daxTxAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
+//    }
+//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

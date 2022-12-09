@@ -5,6 +5,7 @@
 //  Created by Douglas Adams on 1/12/22.
 //
 
+import ComposableArchitecture
 import Foundation
 import SwiftUI
 
@@ -152,6 +153,9 @@ public final class Radio: ObservableObject {
     _domain = String(bundleIdentifier.prefix(upTo: separator))
   }
   
+  @Dependency(\.apiModel) var apiModel
+  @Dependency(\.streamModel) var streamModel
+
   /// Parse the inBound Tcp stream
   /// - Parameter message:      message text
   public func tcpInbound(_ message: String) {
@@ -199,7 +203,7 @@ public final class Radio: ObservableObject {
     
     // register to be notified when reply received
 //    ApiModel.shared.addReplyHandler( sequenceNumber, replyTuple: (replyTo: callback, command: command, continuation: continuation) )
-    ApiModel.shared.addReplyHandler( sequenceNumber, replyTuple: (replyTo: callback, command: command, continuation: continuation) )
+    apiModel.addReplyHandler( sequenceNumber, replyTuple: (replyTo: callback, command: command, continuation: continuation) )
   }
   
   /// Send data to the Radio (hardware)
@@ -223,7 +227,7 @@ public final class Radio: ObservableObject {
     case .didDisconnect:
       log("Tcp: socket disconnected \(status.reason ?? "User initiated"), \(status.error == nil ? "" : "with error \(status.error!.localizedDescription)")", status.error == nil ? .debug : .warning, #function, #file, #line)
       
-      ApiModel.shared.disconnect(status.reason)
+      apiModel.disconnect(status.reason)
     }
   }
   
@@ -368,13 +372,13 @@ extension Radio {
     
     // is the sequence number in the reply handlers?
 //    if let replyTuple = ApiModel.shared.replyHandlers[ seqNum ] {
-    if let replyTuple = ApiModel.shared.replyHandlers[ seqNum ] {
+    if let replyTuple = apiModel.replyHandlers[ seqNum ] {
       // YES
       let command = replyTuple.command
       
       // Remove the object from the notification list
 //      ApiModel.shared.removeReplyHandler(components[0].sequenceNumber)
-      ApiModel.shared.removeReplyHandler(components[0].sequenceNumber)
+      apiModel.removeReplyHandler(components[0].sequenceNumber)
 
       // Anything other than kNoError is an error, log it and ignore the Reply
       guard reply == kNoError else {
@@ -486,7 +490,7 @@ extension Radio {
     }
     
     Task {
-      await ApiModel.shared.parse(objectType, statusMessage)
+      await apiModel.parse(objectType, statusMessage)
     }
   }
   

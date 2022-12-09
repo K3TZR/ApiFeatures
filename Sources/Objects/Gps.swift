@@ -20,8 +20,8 @@ public final class Gps: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (singleton)
 
-  public static var shared = Gps()
-  private init() {}
+//  public static var shared = Gps()
+  public init() {}
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties

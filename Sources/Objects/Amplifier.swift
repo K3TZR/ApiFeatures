@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 
+import ComposableArchitecture
 import Shared
 
 // Amplifier
@@ -22,6 +23,8 @@ public final class Amplifier: Identifiable, ObservableObject {
   // MARK: - Initialization
   
   public init(_ id: AmplifierId) { self.id = id }
+
+  @Dependency(\.apiModel) var apiModel
 
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -55,23 +58,23 @@ public final class Amplifier: Identifiable, ObservableObject {
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-    // get the id
-    if let id = properties[0].key.objectId {
-      // is it in use?
-      if inUse {
-        // YES, add it if not already present
-        if ApiModel.shared.amplifiers[id: id] == nil { ApiModel.shared.amplifiers.append( Amplifier(id) ) }
-        // parse the properties
-        ApiModel.shared.amplifiers[id: id]!.parse( Array(properties.dropFirst(1)) )
-        
-      } else {
-        // NO, remove it
-        ApiModel.shared.amplifiers.remove(id: id)
-        log("Amplifier \(id.hex): REMOVED", .debug, #function, #file, #line)
-      }
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
+//    // get the id
+//    if let id = properties[0].key.objectId {
+//      // is it in use?
+//      if inUse {
+//        // YES, add it if not already present
+//        if ApiModel.shared.amplifiers[id: id] == nil { ApiModel.shared.amplifiers.append( Amplifier(id) ) }
+//        // parse the properties
+//        apiModel.amplifiers[id: id]!.parse( Array(properties.dropFirst(1)) )
+//        
+//      } else {
+//        // NO, remove it
+//        apiModel.amplifiers.remove(id: id)
+//        log("Amplifier \(id.hex): REMOVED", .debug, #function, #file, #line)
+//      }
+//    }
+//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

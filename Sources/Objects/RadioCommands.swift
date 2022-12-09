@@ -354,7 +354,7 @@ extension Radio {
   }
   
   public func removeRemoteRxAudioStream() {
-    StreamModel.shared.removeRemoteRxAudioStream(connectionHandle)
+    streamModel.removeRemoteRxAudioStream(connectionHandle)
   }
   
   // ----------------------------------------------------------------------------
@@ -365,7 +365,7 @@ extension Radio {
   }
   
   public func removeRemoteTxAudioStream() {
-    StreamModel.shared.removeRemoteTxAudioStream(connectionHandle)
+    streamModel.removeRemoteTxAudioStream(connectionHandle)
   }
 
   // ----------------------------------------------------------------------------

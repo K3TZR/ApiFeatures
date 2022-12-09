@@ -52,15 +52,15 @@ public final class RemoteTxAudioStream: Identifiable, Equatable, ObservableObjec
   /// - Parameters:
   ///   - properties: properties in KeyValuesArray form
   ///   - inUse: bool indicating status
-  public static func status(_ properties: KeyValuesArray) {
-    // get the id
-    if let id = properties[0].key.streamId {
-      // add it if not already present
-      if StreamModel.shared.remoteTxAudioStreams[id: id] == nil { StreamModel.shared.remoteTxAudioStreams.append( RemoteTxAudioStream(id) ) }
-      // parse the properties
-      StreamModel.shared.remoteTxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
-    }
-  }
+//  public static func status(_ properties: KeyValuesArray) {
+//    // get the id
+//    if let id = properties[0].key.streamId {
+//      // add it if not already present
+//      if streamModel.remoteTxAudioStreams[id: id] == nil { streamModel.remoteTxAudioStreams.append( RemoteTxAudioStream(id) ) }
+//      // parse the properties
+//      streamModel.remoteTxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
+//    }
+//  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

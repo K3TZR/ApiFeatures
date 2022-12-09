@@ -5,6 +5,7 @@
 //  Created by Douglas Adams on 9/22/22.
 //
 
+import ComposableArchitecture
 import Foundation
 
 import Shared
@@ -17,6 +18,9 @@ public class WaterfallStream: Identifiable {
     self.id = id
   }
   
+  @Dependency(\.streamModel) var streamModel
+  @Dependency(\.apiModel) var apiModel
+
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
   
@@ -62,9 +66,8 @@ public class WaterfallStream: Identifiable {
       
       // log the start of the stream
       log("Waterfall \(vita.streamId.hex) stream: STARTED", .info, #function, #file, #line)
-      Task {
-        await ApiModel.shared.waterfalls[id: vita.streamId]?.setIsStreaming()
-      }
+
+      Task { await MainActor.run {  apiModel.waterfalls[id: vita.streamId]?.setIsStreaming() }}
     }
     
     // Bins are just beyond the payload
@@ -107,7 +110,9 @@ public class WaterfallStream: Identifiable {
         log("Waterfall: missing frame(s), expected = \(_expectedFrameNumber), received = \(_frames[_index].frameNumber), accumulatedBins = \(_accumulatedBins), frameBinCount = \(_frames[_index].frameBinCount)", .debug, #function, #file, #line)
         _expectedFrameNumber = -1
         _accumulatedBins = 0
-//        packetErrors += 1
+        
+        Task { await MainActor.run { streamModel.streamStatus[id: vita.classCode]?.errors += 1 }}
+        
         return
       }
       vita.payloadData.withUnsafeBytes { ptr in

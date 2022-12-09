@@ -52,8 +52,7 @@ public final class Atu: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (singleton)
 
-  public static var shared = Atu()
-  private init() {}
+  public init() {}
   
   // ----------------------------------------------------------------------------
   // MARK: - Public methods
