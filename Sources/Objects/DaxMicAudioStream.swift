@@ -72,23 +72,6 @@ public final class DaxMicAudioStream: Identifiable, Equatable, ObservableObject 
   private var _rxPacketCount = 0
   private var _rxSequenceNumber = -1
   private var _streamActive = false
-  
-  // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray) {
-//    // get the id
-//    if let id = properties[0].key.streamId {
-//      // add it if not already present
-//      if streamModel.daxMicAudioStreams[id: id] == nil { streamModel.daxMicAudioStreams.append( DaxMicAudioStream(id) ) }
-//      // parse the properties
-//      streamModel.daxMicAudioStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
-//    }
-//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

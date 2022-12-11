@@ -79,33 +79,6 @@ public final class Waterfall: Identifiable, ObservableObject {
   public var initialized = false
   
   // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-  
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    if let id = properties[0].key.streamId {
-//      // is it in use?
-//      if inUse {
-//        // YES, add it if not already present
-//        if ApiModel.shared.waterfalls[id: id] == nil { ApiModel.shared.waterfalls.append( Waterfall(id) ) }
-//        // parse the properties
-//        ApiModel.shared.waterfalls[id: id]!.parse( Array(properties.dropFirst(1)) )
-//        streamModel.waterfallStreams.append( WaterfallStream(id) )
-//        
-//      } else {
-//        // NO, remove it
-//        ApiModel.shared.waterfalls.remove(id: id)
-//        streamModel.waterfallStreams.remove(id: id)
-//        log("Waterfall \(id.hex): REMOVED", .info, #function, #file, #line)
-//      }
-//    }
-//  }
-  
-  // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
   
   /// Parse Waterfal properties

@@ -29,10 +29,18 @@ public class Listener: ObservableObject {
     AsyncStream { continuation in _clientStream = { clientEvent in continuation.yield(clientEvent) }
       continuation.onTermination = { @Sendable _ in } }}
   
-  public var packetStream: AsyncStream<PacketEvent> {
-    AsyncStream { continuation in _packetStream = { packetEvent in continuation.yield(packetEvent) }
-      continuation.onTermination = { @Sendable _ in } }}
+//  public var packetStream: AsyncStream<PacketEvent> {
+//    AsyncStream { continuation in _packetStream = { packetEvent in continuation.yield(packetEvent) }
+//      continuation.onTermination = { @Sendable _ in } }}
   
+  public var statusStream: AsyncStream<WanStatus> {
+    AsyncStream { continuation in _statusStream = { status in continuation.yield(status) }
+      continuation.onTermination = { @Sendable _ in } }}
+
+  public var testStream: AsyncStream<TestResult> {
+    AsyncStream { continuation in _testStream = { testResult in continuation.yield(testResult) }
+      continuation.onTermination = { @Sendable _ in } }}
+
   // ----------------------------------------------------------------------------
   // MARK: - Private properties
   
@@ -40,8 +48,10 @@ public class Listener: ObservableObject {
   private var _wanListener: WanListener?
   
   private var _clientStream: (ClientEvent) -> Void = { _ in }
-  private var _packetStream: (PacketEvent) -> Void = { _ in }
-  
+//  private var _packetStream: (PacketEvent) -> Void = { _ in }
+  var _statusStream: (WanStatus) -> Void = { _ in }
+  var _testStream: (TestResult) -> Void = { _ in }
+
   private let _formatter = DateFormatter()
   
   private enum UpdateStatus {
@@ -151,8 +161,35 @@ public class Listener: ObservableObject {
     _wanListener?.sendTlsCommand("application disconnect_users serial=\(serial) handle=\(handle.hex)")
   }
   
+  public func findPacket(for defaultValue: DefaultValue?, _ isGui: Bool) -> Packet? {
+    guard defaultValue != nil else { return nil }
+    if isGui {
+      for packet in packets where packet.serial == defaultValue!.serial && packet.source.rawValue == defaultValue!.source {
+        return packet
+      }
+    } else {
+      for packet in packets where packet.serial == defaultValue!.serial &&
+      packet.source.rawValue == defaultValue!.source &&
+      packet.guiClientStations.contains(defaultValue!.station!) {
+        return packet
+      }
+    }
+    return nil
+  }
+  
   // ----------------------------------------------------------------------------
   // MARK: - Internal methods
+  
+  
+  func statusUpdate(_ status: WanStatus) {
+    _statusStream(status)
+  }
+  
+  func testUpdate(_ result: TestResult) {
+    _testStream(result)
+  }
+
+  
   
   /// Process an incoming DiscoveryPacket
   /// - Parameter newPacket: the packet
@@ -223,7 +260,7 @@ public class Listener: ObservableObject {
     _formatter.dateStyle = .none
     for packet in packets where condition(packet) {
       removePacket(packet)
-      _packetStream( PacketEvent(.deleted, packet: packet) )
+//      _packetStream( PacketEvent(.deleted, packet: packet) )
       log("\(packet.source == .local ? "Lan" : "Wan") Listener: packet REMOVED, \(packet.nickname) \(packet.serial) @ " + _formatter.string(from: packet.lastSeen), .info, #function, #file, #line)
     }
   }
@@ -243,8 +280,7 @@ public class Listener: ObservableObject {
     for packet in packets {
       pickables.append( Pickable(id: UUID(),
                                  packet: packet,
-                                 station: packet.guiClientStations,
-                                 isDefault: false))
+                                 station: packet.guiClientStations))
     }
     return pickables
   }
@@ -256,8 +292,7 @@ public class Listener: ObservableObject {
       for guiClient in guiClients {
         pickables.append( Pickable(id: UUID(),
                                    packet: packet,
-                                   station: guiClient.station,
-                                   isDefault: false))
+                                   station: guiClient.station))
       }
     }
     return pickables
@@ -315,7 +350,7 @@ public class Listener: ObservableObject {
           pickableRadios = getPickableRadios()
           
           // stream and log
-          _packetStream( PacketEvent(status == .newPacket ? .added : .updated, packet: packet) )
+//          _packetStream( PacketEvent(status == .newPacket ? .added : .updated, packet: packet) )
           log("\(packet.source == .local ? "Lan" : "Wan") Listener: packet \(status == .newPacket ? "ADDED" : "UPDATED"), \(packet.nickname) \(packet.serial)", .info, #function, #file, #line)
         }
       }

@@ -18,9 +18,8 @@ import Shared
 @MainActor
 public final class Gps: ObservableObject {
   // ----------------------------------------------------------------------------
-  // MARK: - Initialization (singleton)
+  // MARK: - Initialization
 
-//  public static var shared = Gps()
   public init() {}
   
   // ----------------------------------------------------------------------------

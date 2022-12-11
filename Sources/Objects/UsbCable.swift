@@ -81,30 +81,6 @@ public final class UsbCable: Identifiable, ObservableObject {
   }
   
   // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-  
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    let id = properties[0].key
-//    // is it in use?
-//    if inUse {
-//      // YES, add it if not already present
-//      if ApiModel.shared.usbCables[id: id] == nil { ApiModel.shared.usbCables.append( UsbCable(id) ) }
-//      // parse the properties
-//      ApiModel.shared.usbCables[id: id]!.parse( Array(properties.dropFirst(1)) )
-//
-//    } else {
-//      // NO, remove it
-//      ApiModel.shared.usbCables.remove(id: id)
-//      log("USBCable \(id): REMOVED", .debug, #function, #file, #line)
-//    }
-//  }
-  
-  // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
   
   /// Parse key/value pairs

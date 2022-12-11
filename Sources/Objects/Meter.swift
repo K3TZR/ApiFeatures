@@ -89,46 +89,6 @@ public final class Meter: Identifiable, ObservableObject {
     case source     = "src"
     case units      = "unit"
   }
-  
-//  public enum Units: String {
-//    case none
-//    case amps
-//    case db
-//    case dbfs
-//    case dbm
-//    case degc
-//    case degf
-//    case percent
-//    case rpm
-//    case swr
-//    case volts
-//    case watts
-//  }
- 
-  // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    if let id = UInt32(properties[0].key.components(separatedBy: ".")[0], radix: 10) {
-//      // is it in use?
-//      if inUse {
-//        // YES, add it if not already present
-//        if ApiModel.shared.meters[id: id] == nil { ApiModel.shared.meters.append( Meter(id) ) }
-//        // parse the properties
-//        ApiModel.shared.meters[id: id]!.parse( properties )
-//        
-//      } else {
-//        // NO, remove it
-//        ApiModel.shared.meters.remove(id: id)
-//        log("Meter \(id): REMOVED", .debug, #function, #file, #line)
-//      }
-//    }
-//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

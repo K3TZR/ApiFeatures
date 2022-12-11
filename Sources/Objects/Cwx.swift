@@ -63,7 +63,7 @@ public final class Cwx: ObservableObject {
   ///
   /// - Parameter properties:       a KeyValuesArray
   ///
-  @MainActor public func parse(_ properties: KeyValuesArray) {
+  public func parse(_ properties: KeyValuesArray) {
     // process each key/value pair, <key=value>
     for property in properties {
       // is it a Macro?

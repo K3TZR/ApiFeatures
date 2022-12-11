@@ -45,30 +45,6 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   }
   
   // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool, _ statusMessage: String) {
-//    // get the id
-//    let id = properties[0].key
-//    // is it in use?
-//    if inUse {
-//      // YES, add it if not already present
-//      if ApiModel.shared.profiles[id: id] == nil { ApiModel.shared.profiles.append( Profile(id) ) }
-//      // parse the properties
-//      ApiModel.shared.profiles[id: id]!.parse( statusMessage )
-//      
-//    } else {
-//      // NO, remove it
-//      ApiModel.shared.profiles.remove(id: id)
-//      log("Profile \(id): REMOVED", .debug, #function, #file, #line)
-//    }
-//  }
-  
-  // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
   
   /// Parse Profile key/value pairs

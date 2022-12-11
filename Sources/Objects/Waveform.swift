@@ -19,9 +19,8 @@ import Shared
 public final class Waveform: ObservableObject {
   
   // ----------------------------------------------------------------------------
-  // MARK: - Initialization (singleton)
+  // MARK: - Initialization
 
-//  public static var shared = Waveform()
   public init() {}
   
   // ----------------------------------------------------------------------------

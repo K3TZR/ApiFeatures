@@ -64,23 +64,6 @@ public final class DaxIqStream: Identifiable, Equatable, ObservableObject {
   private var _rxLostPacketCount  = 0
   private var _txSampleCount      = 0
   private var _rxSequenceNumber   = -1
-  
-  // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray) {
-//    // get the id
-//    if let id = properties[0].key.streamId {
-//      // add it if not already present
-//      if streamModel.daxIqStreams[id: id] == nil { streamModel.daxIqStreams.append( DaxIqStream(id) ) }
-//      // parse the properties
-//      streamModel.daxIqStreams[id: id]!.parse( Array(properties.dropFirst(1)) )
-//    }
-//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

@@ -17,9 +17,8 @@ import Shared
 @MainActor
 public final class Wan: ObservableObject {
   // ----------------------------------------------------------------------------
-  // MARK: - Initialization (singleton)
+  // MARK: - Initialization
 
-//  public static var shared = Wan()
   public init() {}
   
   // ----------------------------------------------------------------------------

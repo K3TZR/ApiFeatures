@@ -115,31 +115,6 @@ public final class Slice: Identifiable, ObservableObject {
   public var filters = [(low: Int, high: Int)]()
 
 // ----------------------------------------------------------------------------
-// MARK: - Public Static methods
-
-/// Evaluate a Status messaage
-/// - Parameters:
-///   - properties: properties in KeyValuesArray form
-///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    if let id = properties[0].key.objectId {
-//      // is it in use?
-//      if inUse {
-//        // YES, add it if not already present
-//        if ApiModel.shared.slices[id: id] == nil { ApiModel.shared.slices.append( Slice(id) ) }
-//        // parse the properties
-//        ApiModel.shared.slices[id: id]!.parse( Array(properties.dropFirst(1)) )
-//        
-//      } else {
-//        // NO, remove it
-//        ApiModel.shared.slices.remove(id: id)
-//        log("Slice \(id): REMOVED", .debug, #function, #file, #line)
-//      }
-//    }
-//  }
-
-// ----------------------------------------------------------------------------
 // MARK: - Public Instance methods
 
   /// Parse key/value pairs

@@ -15,15 +15,15 @@ import Shared
 import Tcp
 import Udp
 
-public enum ConnectionError: String, Error {
-  case instantiation = "Failed to create Radio object"
-  case connection = "Failed to connect to Radio"
-  case replyError = "Reply with error"
-  case tcpConnect = "Tcp Failed to connect"
-  case udpBind = "Udp Failed to bind"
-  case wanConnect = "WanConnect Failed"
-  case wanValidation = "WanValidation Failed"
-}
+//public enum ConnectionError: String, Error {
+//  case instantiation = "Failed to create Radio object"
+//  case connection = "Failed to connect to Radio"
+//  case replyError = "Reply with error"
+//  case tcpConnect = "Tcp Failed to connect"
+//  case udpBind = "Udp Failed to bind"
+//  case wanConnect = "WanConnect Failed"
+//  case wanValidation = "WanValidation Failed"
+//}
 
 // ----------------------------------------------------------------------------
 // MARK: - Dependency decalarations
@@ -82,6 +82,7 @@ public final class ApiModel: ObservableObject {
   @Published public var atu = Atu()
   @Published public var cwx = Cwx()
   @Published public var gps = Gps()
+  @Published public var interlock = Interlock()
   @Published public var transmit = Transmit()
   @Published public var wan = Wan()
   @Published public var waveform = Waveform()
@@ -665,7 +666,7 @@ public final class ApiModel: ObservableObject {
     // Band Setting or Interlock?
     switch properties[0].key {
     case ObjectType.bandSetting.rawValue:   bandSettingStatus(Array(statusMessage.keyValuesArray().dropFirst()), !statusMessage.contains(Shared.kRemoved) )
-    default:                                Interlock.shared.parse(properties) ; interlockStateChange(Interlock.shared.state)
+    default:                                interlock.parse(properties) ; interlockStateChange(interlock.state)
     }
   }
     

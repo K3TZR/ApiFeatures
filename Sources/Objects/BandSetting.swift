@@ -53,30 +53,6 @@ public final class BandSetting: Identifiable, ObservableObject {
     case tx2Enabled         = "tx2_enabled"
     case tx3Enabled         = "tx3_enabled"
   }
-  
-  // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    if let id = properties[0].key.objectId {
-//      // is it in use?
-//      if inUse {
-//        // YES, add it if not already present
-//        if ApiModel.shared.bandSettings[id: id] == nil { ApiModel.shared.bandSettings.append( BandSetting(id) ) }
-//        // parse the properties
-//        ApiModel.shared.bandSettings[id: id]!.parse( Array(properties.dropFirst(1)) )
-//      } else {
-//        // NO, remove it
-//        ApiModel.shared.bandSettings.remove(id: id)
-//        log("BandSetting \(id): REMOVED", .debug, #function, #file, #line)
-//      }
-//    }
-//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

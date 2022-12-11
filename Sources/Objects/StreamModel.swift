@@ -56,9 +56,8 @@ extension DependencyValues {
 
 public final class StreamModel: ObservableObject {
   // ----------------------------------------------------------------------------
-  // MARK: - Initialization (Singleton)
+  // MARK: - Initialization
   
-//  public static var shared = StreamModel()
   public init() {
     streamStatus[id: Vita.PacketClassCodes.daxIq24] = VitaStatus(Vita.PacketClassCodes.daxIq24)
     streamStatus[id: Vita.PacketClassCodes.daxIq48] = VitaStatus(Vita.PacketClassCodes.daxIq48)
@@ -210,27 +209,6 @@ public final class StreamModel: ObservableObject {
       await apiModel.radio?.send("stream remove \(id.hex)")
     }
   }
-
-  /// Determine if status is for this client
-  /// - Parameters:
-  ///   - properties:     a KeyValuesArray
-  ///   - clientHandle:   the handle of ???
-  /// - Returns:          true if a mtch
-//  func isForThisClient(_ properties: KeyValuesArray) -> Bool {
-//    var clientHandle : Handle = 0
-//
-//    guard connectionHandle != nil else { return false }
-//
-//    // FIXME: probably not needed
-//    // allow a Tester app to see all Streams
-////    guard _testerMode == false else { return true }
-//
-//    // find the handle property
-//    for property in properties.dropFirst(2) where property.key == "client_handle" {
-//      clientHandle = property.value.handle ?? 0
-//    }
-//    return clientHandle == connectionHandle
-//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Private methods (streams)

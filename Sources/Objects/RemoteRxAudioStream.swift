@@ -63,23 +63,6 @@ public final class RemoteRxAudioStream: Identifiable, Equatable, ObservableObjec
   private var _vita: Vita?
 
   // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray) {
-//    // get the id
-//    if let id = properties[0].key.streamId {
-//      // add it if not already present
-//      if streamModel.remoteRxAudioStreams[id: id] == nil { streamModel.remoteRxAudioStreams.append( RemoteRxAudioStream(id) ) }
-//      // parse the properties
-//      streamModel.remoteRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
-//    }
-//  }
-
-  // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
 
   ///  Parse RemoteRxAudioStream key/value pairs

@@ -115,7 +115,8 @@ extension WanListener {
       }
       if _publicIp != nil {
         // stream it
-        _statusStream(WanStatus(.publicIp, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+        Listener.shared.statusUpdate(WanStatus(.publicIp, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+//        _statusStream(WanStatus(.publicIp, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
       }
     }
   }
@@ -156,7 +157,8 @@ extension WanListener {
     
     if _firstName != nil && _lastName != nil && _callsign != nil {
       // stream it
-      _statusStream(WanStatus(.settings, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+      Listener.shared.statusUpdate(WanStatus(.settings, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+//      _statusStream(WanStatus(.settings, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
     }
   }
   
@@ -280,6 +282,7 @@ extension WanListener {
 //    Task { [result] in
 //      await Api.shared.smartlinkTestResult( result )
 //    }
-    _testStream( result )
+    Listener.shared.testUpdate(result)
+//    _testStream( result )
   }
 }

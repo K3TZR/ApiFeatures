@@ -22,12 +22,7 @@ public enum PingStatus {
 ///      generates "ping" messages every pingInterval second(s)
 ///      sends a PingStatus when stopped with an optional reason code
 ///
-public final class Pinger {
-  // ----------------------------------------------------------------------------
-  // MARK: - Publishers
-  
-//  public var pingPublisher = PassthroughSubject<PingStatus, Never>()
-  
+public final class Pinger { 
   // ----------------------------------------------------------------------------
   // MARK: - Private properties
   

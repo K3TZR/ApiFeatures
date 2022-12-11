@@ -24,15 +24,7 @@ public final class WanListener: NSObject, ObservableObject {
   // MARK: - Public properties
   
   public static let kTimeout: Double = 5.0
-  
-  public var statusStream: AsyncStream<WanStatus> {
-    AsyncStream { continuation in _statusStream = { status in continuation.yield(status) }
-      continuation.onTermination = { @Sendable _ in } }}
-
-  public var testStream: AsyncStream<TestResult> {
-    AsyncStream { continuation in _testStream = { testResult in continuation.yield(testResult) }
-      continuation.onTermination = { @Sendable _ in } }}
-  
+    
   // ----------------------------------------------------------------------------
   // MARK: - Internal properties
   
@@ -57,8 +49,6 @@ public final class WanListener: NSObject, ObservableObject {
   private var _previousIdToken: IdToken?
   private var _pwd: String?
   private let _socketQ = DispatchQueue(label: "WanListener.socketQ")
-  var _statusStream: (WanStatus) -> Void = { _ in }
-  var _testStream: (TestResult) -> Void = { _ in }
   private var _timeout = 0.0                // seconds
   private var _user: String?
   

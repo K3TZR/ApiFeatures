@@ -44,23 +44,6 @@ public final class RemoteTxAudioStream: Identifiable, Equatable, ObservableObjec
     case compression
     case ip
   }
-
-  // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray) {
-//    // get the id
-//    if let id = properties[0].key.streamId {
-//      // add it if not already present
-//      if streamModel.remoteTxAudioStreams[id: id] == nil { streamModel.remoteTxAudioStreams.append( RemoteTxAudioStream(id) ) }
-//      // parse the properties
-//      streamModel.remoteTxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
-//    }
-//  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
@@ -105,8 +88,7 @@ public final class RemoteTxAudioStream: Identifiable, Equatable, ObservableObjec
   /// - Parameters:
   ///   - buffer:             array of encoded audio samples
   /// - Returns:              success / failure
-  @MainActor public func sendAudio(buffer: [UInt8], samples: Int) {
-    guard Interlock.shared.state == "TRANSMITTING" else { return }
+  public func sendAudio(buffer: [UInt8], samples: Int) {
     
     if isStreaming == false {
       isStreaming = true

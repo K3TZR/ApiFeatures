@@ -22,7 +22,6 @@ public final class Transmit: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization
   
-  //  public static var shared = Transmit()
   public init() {}
   
   @Dependency(\.apiModel) var apiModel
@@ -323,8 +322,8 @@ public final class Transmit: ObservableObject {
 //      case .ssbMonitorPan:          ssbMonitorPan = property.value.iValue
 //      case .txAntenna:              txAntenna = property.value
 //      case .txFilterChanges:        txFilterChanges = property.value.bValue
-      case .txFilterHigh:           transmitCmd("filter_low", "=", value)
-      case .txFilterLow:            transmitCmd("filter_high", "=", value)
+      case .txFilterHigh:           transmitCmd("filter_high", "=", value)
+      case .txFilterLow:            transmitCmd("filter_low", "=", value)
 //      case .txInWaterfallEnabled:   txInWaterfallEnabled = property.value.bValue
 //      case .txMonitorAvailable:     txMonitorAvailable = property.value.bValue
 //      case .txMonitorEnabled:       txMonitorEnabled = property.value.bValue

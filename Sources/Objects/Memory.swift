@@ -71,31 +71,6 @@ public final class Memory: Identifiable, ObservableObject {
     case toneMode                   = "tone_mode"
     case toneValue                  = "tone_value"
   }
-
-  // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    if let id = properties[0].key.objectId {
-//      // is it in use?
-//      if inUse {
-//        // YES, add it if not already present
-//        if ApiModel.shared.memories[id: id] == nil { ApiModel.shared.memories.append( Memory(id) ) }
-//        // parse the properties
-//        ApiModel.shared.memories[id: id]!.parse( Array(properties.dropFirst(1)) )
-//        
-//      } else {
-//        // NO, remove it
-//        ApiModel.shared.memories.remove(id: id)
-//        log("Memory \(id): REMOVED", .debug, #function, #file, #line)
-//      }
-//    }
-//  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

@@ -17,10 +17,9 @@ import Shared
 @MainActor
 public final class Interlock: ObservableObject {
   // ----------------------------------------------------------------------------
-  // MARK: - Initialization (singleton)
+  // MARK: - Initialization
 
-  public static var shared = Interlock()
-  private init() {}
+  public init() {}
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties

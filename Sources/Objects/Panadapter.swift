@@ -139,35 +139,6 @@ public final class Panadapter: Identifiable, ObservableObject {
   private var _freqStep: CGFloat = 10_000
   
   // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-  
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  public static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    if let id = properties[0].key.streamId {
-//      // is it in use?
-//      if inUse {
-//        // parse the properties
-//        // YES, add it if not already present
-//        if ApiModel.shared.panadapters[id: id] == nil {
-//          ApiModel.shared.panadapters.append( Panadapter(id) )
-//          streamModel.panadapterStreams.append( PanadapterStream(id) )
-//        }
-//        ApiModel.shared.panadapters[id: id]!.parse( Array(properties.dropFirst(1)) )
-//        
-//      } else {
-//        // NO, remove it
-//        ApiModel.shared.panadapters.remove(id: id)
-//        streamModel.panadapterStreams.remove(id: id)
-//        log("Panadapter \(id.hex): REMOVED", .debug, #function, #file, #line)
-//      }
-//    }
-//  }
-  
-  // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
   
   /// Parse key/value pairs
