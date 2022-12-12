@@ -161,16 +161,18 @@ public class Listener: ObservableObject {
     _wanListener?.sendTlsCommand("application disconnect_users serial=\(serial) handle=\(handle.hex)")
   }
   
-  public func findPacket(for defaultValue: DefaultValue?, _ isGui: Bool) -> Packet? {
-    guard defaultValue != nil else { return nil }
+  public func findPacket(for guiDefault: DefaultValue?, _ nonGuiDefault: DefaultValue?, _ isGui: Bool) -> Packet? {
     if isGui {
-      for packet in packets where packet.serial == defaultValue!.serial && packet.source.rawValue == defaultValue!.source {
+      guard guiDefault != nil else { return nil }
+      for packet in packets where packet.serial == guiDefault!.serial && packet.source.rawValue == guiDefault!.source {
         return packet
       }
+
     } else {
-      for packet in packets where packet.serial == defaultValue!.serial &&
-      packet.source.rawValue == defaultValue!.source &&
-      packet.guiClientStations.contains(defaultValue!.station!) {
+      guard nonGuiDefault != nil else { return nil }
+      for packet in packets where packet.serial == nonGuiDefault!.serial &&
+      packet.source.rawValue == nonGuiDefault!.source &&
+      packet.guiClientStations.contains(nonGuiDefault!.station!) {
         return packet
       }
     }

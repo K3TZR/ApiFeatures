@@ -165,10 +165,12 @@ public final class Tcp: NSObject {
     _socket.write(command.data(using: String.Encoding.utf8, allowLossyConversion: false)!, withTimeout: -1, tag: _sequenceNumber)
     
     // stream it to the tester (if any)
-    let timeStamp = Date()
-    let message = TcpMessage(text: String(command.dropLast()), direction: .sent, timeStamp: timeStamp, interval: timeStamp.timeIntervalSince(_startTime!))
-    Task {
-      await MainActor.run { testerDelegate?.testerMessages( message ) }
+    if _startTime != nil {
+      let timeStamp = Date()
+      let message = TcpMessage(text: String(command.dropLast()), direction: .sent, timeStamp: timeStamp, interval: timeStamp.timeIntervalSince(_startTime!))
+      Task {
+        await MainActor.run { testerDelegate?.testerMessages( message ) }
+      }
     }
 
     // return the Sequence Number used by this send
