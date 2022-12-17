@@ -49,11 +49,11 @@ extension StreamModel: DependencyKey {
 
 extension DependencyValues {
   public var streamModel: StreamModel {
-    get { self[StreamModel.self] }
-    set { self[StreamModel.self] = newValue }
+    self[StreamModel.self]
   }
 }
 
+@MainActor
 public final class StreamModel: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization
@@ -105,13 +105,10 @@ public final class StreamModel: ObservableObject {
 
   /// Remove a RemoteRxAudioStream
   /// - Parameter handle: a Client Handle
-  public func removeRemoteRxAudioStream(_ handle: Handle?) {
-    if let handle {
-      for stream in remoteRxAudioStreams where stream.clientHandle == handle {
-        remoteRxAudioStreams[id: stream.id]?.setDelegate(nil)
-        sendRemoveStream(id: stream.id)
-      }
-    }
+  public func removeRemoteRxAudioStream(_ id: StreamId?) {
+    guard id != nil else { return }
+    remoteRxAudioStreams[id: id!]?.setDelegate(nil)
+    sendRemoveStream(id: id!)
   }
   
   /// Remove a RemoteTxAudioStream
@@ -230,7 +227,7 @@ public final class StreamModel: ObservableObject {
     case .daxAudio:
       if let object = daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita)}
       if let object = daxMicAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
-      if let object = remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = remoteRxAudioStreams[id: vita.streamId] { Task { await object.vitaProcessor(vita) } }
       
     case .daxReducedBw:
       if let object = daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
@@ -242,7 +239,7 @@ public final class StreamModel: ObservableObject {
       }
       
     case .opus:
-      if let object = remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
+      if let object = remoteRxAudioStreams[id: vita.streamId] { Task { await object.vitaProcessor(vita) } }
       
     default:
       // log the error
@@ -316,7 +313,9 @@ public final class StreamModel: ObservableObject {
       // add it if not already present
       if remoteRxAudioStreams[id: id] == nil { remoteRxAudioStreams.append( RemoteRxAudioStream(id) ) }
       // parse the properties
-      remoteRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
+      Task {
+        await remoteRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
+      }
     }
   }
 

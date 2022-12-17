@@ -22,19 +22,6 @@ public enum EqType: String {
 //
 @MainActor
 public final class Equalizer: Identifiable, ObservableObject {
-//  public static func == (lhs: Equalizer, rhs: Equalizer) -> Bool {
-//    guard lhs.eqEnabled == rhs.eqEnabled else { return false }
-//    guard lhs.hz63 == rhs.hz63 else { return false }
-//    guard lhs.hz125 == rhs.hz125 else { return false }
-//    guard lhs.hz250 == rhs.hz250 else { return false }
-//    guard lhs.hz500 == rhs.hz500 else { return false }
-//    guard lhs.hz1000 == rhs.hz1000 else { return false }
-//    guard lhs.hz2000 == rhs.hz2000 else { return false }
-//    guard lhs.hz4000 == rhs.hz4000 else { return false }
-//    guard lhs.hz8000 == rhs.hz8000 else { return false }
-//    return true
-//  }
-  
   // ------------------------------------------------------------------------------
   // MARK: - Initialization
   
@@ -139,31 +126,6 @@ public final class Equalizer: Identifiable, ObservableObject {
    eq apf mode=" + apfMode
    eq apf qfactor=" + apfQFactor
    */
-
-  // ----------------------------------------------------------------------------
-  // MARK: - Public Static methods
-
-  /// Evaluate a Status messaage
-  /// - Parameters:
-  ///   - properties: properties in KeyValuesArray form
-  ///   - inUse: bool indicating status
-//  static func status(_ properties: KeyValuesArray, _ inUse: Bool) {
-//    // get the id
-//    let id = properties[0].key
-//    if id == "tx" || id == "rx" { return } // legacy equalizer ids, ignore
-//    // is it in use?
-//    if inUse {
-//      // YES, add it if not already present
-//      if ApiModel.shared.equalizers[id: id] == nil { ApiModel.shared.equalizers.append( Equalizer(id) ) }
-//      // parse the properties
-//      ApiModel.shared.equalizers[id: id]!.parse( Array(properties.dropFirst(1)) )
-//
-//    } else {
-//      // NO, remove it
-//      ApiModel.shared.equalizers.remove(id: id)
-//      log("Equalizer \(id): REMOVED", .debug, #function, #file, #line)
-//    }
-//  }
 
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods

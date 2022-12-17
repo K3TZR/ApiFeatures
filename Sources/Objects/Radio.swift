@@ -73,7 +73,7 @@ public final class Radio: ObservableObject {
   public internal(set) var lowLatencyDigital = false
   public internal(set) var macAddress = ""
   @Published public internal(set) var micList = [MicrophonePort]()
-  public internal(set) var mox = false
+  @Published public internal(set) var mox = false
   public internal(set) var muteLocalAudio = false
   public internal(set) var netmask = ""
   public internal(set) var nickname = ""

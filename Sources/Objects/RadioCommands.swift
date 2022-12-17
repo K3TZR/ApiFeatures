@@ -353,9 +353,9 @@ extension Radio {
     try await sendAwaitReply("stream create type=remote_audio_rx compression=\(compression)", replyTo: callback)
   }
   
-  public func removeRemoteRxAudioStream() {
-    streamModel.removeRemoteRxAudioStream(connectionHandle)
-  }
+//  public func removeRemoteRxAudioStream() {
+//    streamModel.removeRemoteRxAudioStream(connectionHandle)
+//  }
   
   // ----------------------------------------------------------------------------
   // MARK: -  RemoteTxAudioStream methods

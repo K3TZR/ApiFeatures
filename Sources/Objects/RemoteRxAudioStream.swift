@@ -16,6 +16,7 @@ import Shared
 //      are added / removed by the incoming TCP messages. RemoteRxAudioStream instances
 //      periodically receive Audio in a UDP stream. They are collected in the
 //      Model.remoteRxAudioStreams collection.
+@MainActor
 public final class RemoteRxAudioStream: Identifiable, Equatable, ObservableObject {
   // Equality
   public nonisolated static func == (lhs: RemoteRxAudioStream, rhs: RemoteRxAudioStream) -> Bool {
@@ -44,7 +45,7 @@ public final class RemoteRxAudioStream: Identifiable, Equatable, ObservableObjec
   @Published public var compression = ""
   @Published public var ip = ""
   
-  public var delegate: StreamHandler?
+  public weak var delegate: StreamHandler?
   
   public enum Property: String {
     case clientHandle = "client_handle"
@@ -135,9 +136,7 @@ public final class RemoteRxAudioStream: Identifiable, Equatable, ObservableObjec
       _streamActive = true
       // log the start of the stream
       log("RemoteRxAudioStream \(id.hex): STARTED", .info, #function, #file, #line)
-      Task {
-        await MainActor.run { isStreaming = true }
-      }
+      isStreaming = true 
     }
     if compression == "opus" {
       // is this the first packet?

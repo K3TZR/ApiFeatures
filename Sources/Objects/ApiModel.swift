@@ -30,16 +30,34 @@ import Udp
 
 extension ApiModel: DependencyKey {
   public static let liveValue = ApiModel()
-  public static let previewValue = ApiModel()
-  public static let testValue = ApiModel()
+//  public static let previewValue = ApiModel()
+  public static var previewValue: ApiModel {
+    let model = ApiModel()
+    model.equalizers.append(Equalizer("rxsc"))
+    model.equalizers.append(Equalizer("txsc"))
+    model.transmit.txFilterLow = 100
+    model.transmit.txFilterHigh = 2000
+    model.transmit.micSelection = "Mic2"
+    model.profiles.append(Profile("mic"))
+    model.profiles[id: "mic"]!.list = ["Profile1", "Profile2"]
+    model.profiles[id: "mic"]!.current = "Profile2"
+    model.profiles.append(Profile("tx"))
+    model.profiles[id: "tx"]!.list = ["Profile3", "Profile4"]
+    model.profiles[id: "tx"]!.current = "Profile4"
+    model.radio = Radio(Packet())
+    model.radio?.micList = ["Mic1", "Mic2", "Mic3"]
+    model.atu.status = "BYP"
+    return model
+  }
 }
 
 extension DependencyValues {
   public var apiModel: ApiModel {
-    get { self[ApiModel.self] }
-    set { self[ApiModel.self] = newValue }
+    get {self[ApiModel.self]}
+    set {self[ApiModel.self] = newValue}
   }
 }
+
 @MainActor
 public final class ApiModel: ObservableObject {
   // ----------------------------------------------------------------------------
@@ -357,6 +375,7 @@ public final class ApiModel: ObservableObject {
     removeAll(of: .daxMicAudioStream)
     removeAll(of: .daxRxAudioStream)
     removeAll(of: .daxTxAudioStream)
+    removeAll(of: .equalizer)
     removeAll(of: .memory)
     removeAll(of: .meter)
     removeAll(of: .panadapter)
@@ -390,6 +409,7 @@ public final class ApiModel: ObservableObject {
     case .daxMicAudioStream:    streamModel.daxMicAudioStreams.removeAll()
     case .daxRxAudioStream:     streamModel.daxRxAudioStreams.removeAll()
     case .daxTxAudioStream:     streamModel.daxTxAudioStreams.removeAll()
+    case .equalizer:            equalizers.removeAll()
     case .memory:               memories.removeAll()
     case .meter:                meters.removeAll()
     case .panadapter:

@@ -40,8 +40,8 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   @Published public var list = [ProfileName]()
   
   public enum Property: String {
-    case list       = "list"
-    case current  = "current"
+    case list = "list"
+    case current = "current"
   }
   
   // ----------------------------------------------------------------------------
