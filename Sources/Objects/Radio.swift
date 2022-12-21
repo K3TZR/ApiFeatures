@@ -15,7 +15,7 @@ import Tcp
 import Udp
 
 @MainActor
-public final class Radio: ObservableObject {
+public final class Radio: Equatable, ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
   

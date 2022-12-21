@@ -75,6 +75,7 @@ public final class ApiModel: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
   
+  @Published public var clientInitialized: Bool = false
   @Published public var radio: Radio?
   @Published public var activeEqualizer: Equalizer?
   @Published public var activeSlice: Slice?
@@ -258,6 +259,10 @@ public final class ApiModel: ObservableObject {
     activePacket = currentPacket
   }
   
+  public func resetClientInitialized() {
+    clientInitialized = false
+  }
+  
   /// Disconnect the current Radio and remove all its objects / references
   /// - Parameter reason: an optional reason
   public func disconnect(_ reason: String? = nil) {
@@ -369,6 +374,15 @@ public final class ApiModel: ObservableObject {
   /// Remove all Radio objects
   func removeAllObjects() {
     
+    // FIXME: these may not be necessary
+    radio = nil
+    activeEqualizer = nil
+    activeSlice = nil
+    activeStation = nil
+    activePacket = nil
+    activePanadapter = nil
+    log("ApiModel: removed Model properties", .debug, #function, #file, #line)
+
     removeAll(of: .amplifier)
     removeAll(of: .bandSetting)
     removeAll(of: .daxIqStream)
@@ -391,14 +405,6 @@ public final class ApiModel: ObservableObject {
     replyHandlers.removeAll()
     log("ApiModel: removed all reply handlers", .debug, #function, #file, #line)
     
-    // FIXME: these may not be necessary
-    radio = nil
-    activeEqualizer = nil
-    activeSlice = nil
-    activeStation = nil
-    activePacket = nil
-    activePanadapter = nil
-    log("ApiModel: removed Model properties", .debug, #function, #file, #line)
   }
   
   func removeAll(of type: ObjectType) {
@@ -787,6 +793,9 @@ public final class ApiModel: ObservableObject {
       case program
       case station
     }
+    
+    // if handle is mine, this client is fully initialized
+    if handle == radio?.connectionHandle { clientInitialized = true }
     
     // parse remaining properties
     for property in properties.dropFirst(2) {

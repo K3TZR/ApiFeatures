@@ -40,7 +40,9 @@ public final class Waterfall: Identifiable, ObservableObject {
   @Published public var gradientIndex = 0
   @Published public var lineDuration = 0
   @Published public var panadapterId: PanadapterId?
-  
+
+  @Published public var selectedGradient = GradientEnum.Basic.rawValue
+
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
   
@@ -77,6 +79,16 @@ public final class Waterfall: Identifiable, ObservableObject {
   
   public let id: WaterfallId
   public var initialized = false
+  
+  public enum GradientEnum: String, CaseIterable {
+    case Basic
+    case Dark
+    case Deuteranopia
+    case Grayscale
+    case Purple
+    case Tritanopia
+  }
+
   
   // ----------------------------------------------------------------------------
   // MARK: - Public Instance methods
