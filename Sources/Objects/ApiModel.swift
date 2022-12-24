@@ -46,7 +46,7 @@ extension ApiModel: DependencyKey {
     model.profiles[id: "tx"]!.current = "Profile4"
     model.radio = Radio(Packet())
     model.radio?.micList = ["Mic1", "Mic2", "Mic3"]
-    model.atu.status = "BYP"
+    model.atu.status = .tuneBypass
     return model
   }
 }
@@ -70,6 +70,7 @@ public final class ApiModel: ObservableObject {
     subscribeToUdpStatus()
   }
   
+  @Dependency(\.listener) var listener
   @Dependency(\.streamModel) var streamModel
   
   // ----------------------------------------------------------------------------
@@ -212,7 +213,7 @@ public final class ApiModel: ObservableObject {
     // is this a Wan connection?
     if selection.packet.source == .smartlink {
       // YES, send Wan Connect message & wait for the reply
-      wanHandle = try await Listener.shared.sendWanConnect(for: selection.packet.serial, holePunchPort: selection.packet.negotiatedHolePunchPort)
+      wanHandle = try await listener.sendWanConnect(for: selection.packet.serial, holePunchPort: selection.packet.negotiatedHolePunchPort)
       // put the wanHandle into the packet
       currentPacket.wanHandle = wanHandle!
       log("Api: wanHandle received", .debug, #function, #file, #line)
@@ -817,7 +818,7 @@ public final class ApiModel: ObservableObject {
     }
     
     // is this GuiClient already in GuiClients?
-    if let guiClient = Listener.shared.guiClients[id: handle] {
+    if let guiClient = activePacket?.guiClients[id: handle] {
       
       // are all fields populated?
       if clientId.isEmpty || program.isEmpty || station.isEmpty {
@@ -838,10 +839,10 @@ public final class ApiModel: ObservableObject {
       // YES, update it
 //      Task(priority: .low) {
 //        await MainActor.run {
-          Listener.shared.guiClients[id: handle]!.clientId = guiClient.clientId
-          Listener.shared.guiClients[id: handle]!.program = guiClient.program
-          Listener.shared.guiClients[id: handle]!.station = guiClient.station
-          Listener.shared.guiClients[id: handle]!.isLocalPtt = guiClient.isLocalPtt
+      activePacket?.guiClients[id: handle]!.clientId = guiClient.clientId
+      activePacket?.guiClients[id: handle]!.program = guiClient.program
+      activePacket?.guiClients[id: handle]!.station = guiClient.station
+      activePacket?.guiClients[id: handle]!.isLocalPtt = guiClient.isLocalPtt
 //        }
 //      }
       
@@ -849,7 +850,7 @@ public final class ApiModel: ObservableObject {
       log("ApiModel: guiClient UPDATED, \(handle.hex), \(station), \(program), \(clientId)", .info, #function, #file, #line)
       
       // log & notify if all essential properties are present
-      Listener.shared.checkCompletion(Listener.shared.guiClients[id: handle]!)
+//      listener.checkCompletion(listener.guiClients[id: handle]!)
       
     } else {
       let newGuiClient = GuiClient(handle: handle,
@@ -861,13 +862,13 @@ public final class ApiModel: ObservableObject {
 //      Task(priority: .low) {
 //        await MainActor.run {
           // NO, add it
-          Listener.shared.guiClients[id: handle] = newGuiClient
+      activePacket?.guiClients[id: handle] = newGuiClient
           
           // log the addition
           log("ApiModel: guiClient ADDED, \(newGuiClient.handle.hex), \(newGuiClient.station), \(newGuiClient.program), \(newGuiClient.clientId ?? "nil")", .info, #function, #file, #line)
           
           // log & notify if all essential properties are present
-          Listener.shared.checkCompletion(Listener.shared.guiClients[id: handle]!)
+//          listener.checkCompletion(listener.guiClients[id: handle]!)
 //        }
 //      }
     }

@@ -9,7 +9,7 @@ let package = Package(
     .iOS(.v15),
     .macOS(.v12),
   ],
-
+  
   products: [
     .library(name: "FlexErrors", targets: ["FlexErrors"]),
     .library(name: "Listener", targets: ["Listener"]),
@@ -17,14 +17,14 @@ let package = Package(
     .library(name: "Tcp", targets: ["Tcp"]),
     .library(name: "Udp", targets: ["Udp"]),
   ],
-
+  
   dependencies: [
     .package(url: "https://github.com/robbiehanson/CocoaAsyncSocket", from: "7.6.5"),
     .package(url: "https://github.com/auth0/JWTDecode.swift", from: "2.6.0"),
     .package(url: "https://github.com/K3TZR/SharedFeatures.git", from: "1.3.1"),
     .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "0.42.0"),
   ],
-
+  
   targets: [
     // --------------- Modules ---------------
     
@@ -32,7 +32,7 @@ let package = Package(
     .target(name: "FlexErrors",dependencies: [
       .product(name: "Shared", package: "SharedFeatures"),
     ]),
-
+    
     // Listener
     .target(name: "Listener",dependencies: [
       .product(name: "CocoaAsyncSocket", package: "CocoaAsyncSocket"),
@@ -40,7 +40,7 @@ let package = Package(
       .product(name: "JWTDecode", package: "JWTDecode.swift"),
       .product(name: "Shared", package: "SharedFeatures"),
     ]),
-
+    
     // Objects
     .target(name: "Objects",dependencies: [
       .product(name: "Shared", package: "SharedFeatures"),
@@ -62,6 +62,11 @@ let package = Package(
       .product(name: "CocoaAsyncSocket", package: "CocoaAsyncSocket"),
       .product(name: "Shared", package: "SharedFeatures"),
     ]),
+
+    .testTarget(
+        name: "ApiFeaturesTests", dependencies: [
+          "Listener"
+        ]),
   ]
 )
 

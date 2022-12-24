@@ -829,3 +829,35 @@ extension Radio {
    "radio set enforce_private_ip_connections=" + Convert.ToByte(_enforcePrivateIPConnections)
    */
 }
+
+extension Radio {
+  
+//  public func parseAndSend(_ property: Property, _ value: String = "") {
+//    var newValue = value
+//
+//    // alphabetical order
+//    switch property {
+//
+//    }
+//    parse([(property.rawValue, newValue)])
+//    send(property, newValue)
+//  }
+//
+//  public func send(_ property: Property, _ value: String) {
+//    // Known tokens, in alphabetical order
+//    switch property {
+//    }
+//  }
+  
+  // ----------------------------------------------------------------------------
+  // MARK: - Private methods
+  
+  /// Send a command to Set a property
+  /// - Parameters:
+  ///   - token:      the parse token
+  ///   - separator:  String used between token and value
+  ///   - value:      the new value
+//  private func transmitCmd(_ token: Property, _ separator: String, _ value: Any) {
+//    apiModel.send("transmit set " + token.rawValue + separator + "\(value)")
+//  }
+}

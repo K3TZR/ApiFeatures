@@ -19,6 +19,7 @@ public enum ListenerError: String, Error {
 ///  WanListener Class implementation
 ///      connect to the Smartlink server which announces the presence
 ///      of Smartlink-accessible Radio(s), publishes changes
+
 public final class WanListener: NSObject, ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -56,14 +57,20 @@ public final class WanListener: NSObject, ObservableObject {
   private let kSmartlinkPort: UInt16 = 443
   private let kPlatform = "macOS"
   
+  
+  let _listener: Listener!
+  
+  
   var activeContinuation: CheckedContinuation<String, Error>?
 
   // ------------------------------------------------------------------------------
   // MARK: - Initialization
   
-  init(timeout: Double = kTimeout) {
+  init(_ listener: Listener, timeout: Double = kTimeout) {
+    _listener = listener
+
     super.init()
-    
+
     _appName = (Bundle.main.infoDictionary!["CFBundleName"] as! String)
     _timeout = timeout
 

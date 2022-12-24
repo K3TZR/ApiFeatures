@@ -115,7 +115,9 @@ extension WanListener {
       }
       if _publicIp != nil {
         // stream it
-        Listener.shared.statusUpdate(WanStatus(.publicIp, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+        Task {
+          await _listener.statusUpdate(WanStatus(.publicIp, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+        }
 //        _statusStream(WanStatus(.publicIp, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
       }
     }
@@ -156,9 +158,9 @@ extension WanListener {
     }
     
     if _firstName != nil && _lastName != nil && _callsign != nil {
-      // stream it
-      Listener.shared.statusUpdate(WanStatus(.settings, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
-//      _statusStream(WanStatus(.settings, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+      Task {
+        await _listener.statusUpdate(WanStatus(.settings, _firstName! + " " + _lastName!, _callsign!, _serial, _wanHandle, _publicIp))
+      }
     }
   }
   
@@ -237,10 +239,9 @@ extension WanListener {
       packet.source = .smartlink
       // add packet to Packets
       let newPacket = packet
-//      Task {
-//        await PacketModel.shared.processPacket(newPacket)
-//      }
-      Listener.shared.processPacket(newPacket)
+      Task {
+        await _listener.processPacket(newPacket)
+      }
     }
   }
   
@@ -279,10 +280,8 @@ extension WanListener {
     }
     // log and publish the result
     log("Wan Listener: Test result received, \(result.success ? "SUCCESS" : "FAILURE")", result.success ? .debug : .warning, #function, #file, #line)
-//    Task { [result] in
-//      await Api.shared.smartlinkTestResult( result )
-//    }
-    Listener.shared.testUpdate(result)
-//    _testStream( result )
+    Task { [result] in
+      await _listener.testUpdate(result)
+    }
   }
 }

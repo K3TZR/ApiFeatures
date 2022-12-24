@@ -12,12 +12,56 @@ import SwiftUI
 //import LoginFeature
 import Shared
 
+extension Listener: DependencyKey {
+  public static let liveValue = Listener()
+//  public static let previewValue = Listener()
+  public static var previewValue: Listener {
+    let listener = Listener()
+    
+    let packet1 = Packet(source: .local,
+                        nickname: "Dougs 6700",
+                        serial: "1234-5678-9012-3456",
+                        publicIp: "192.168.1.200",
+                        status: "available",
+                        guiClientStations: "")
+    listener.processPacket(packet1)
+    
+    let packet2 = Packet(source: .local,
+                    nickname: "Dougs 6300",
+                    serial: "5678-9012-3456-7890",
+                    publicIp: "192.168.1.201",
+                    status: "available",
+                    guiClientHandles: "0x12345678,,",
+                    guiClientPrograms: "xSDR6000,,",
+                    guiClientStations: "40 Meters,,",
+                    guiClientIps: "192.168.1.222,,")
+    listener.processPacket(packet2)
+    
+    let packet3 = Packet(source: .smartlink,
+                    nickname: "Petes 6700",
+                    serial: "9012-3456-7890-1234",
+                    publicIp: "77.24.1.200",
+                    status: "available",
+                    guiClientStations: "")
+    listener.processPacket(packet3)
+    return listener
+  }
+}
+
+extension DependencyValues {
+  public var listener: Listener{
+    get {self[Listener.self]}
+    set {self[Listener.self] = newValue}
+  }
+}
+
+@MainActor
 public class Listener: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Published properties
   
   @Published public var packets = IdentifiedArrayOf<Packet>()
-  @Published public var guiClients = IdentifiedArrayOf<GuiClient>()
+//  @Published public var guiClients = IdentifiedArrayOf<GuiClient>()
   
   @Published public var pickableRadios = IdentifiedArrayOf<Pickable>()
   @Published public var pickableStations = IdentifiedArrayOf<Pickable>()
@@ -63,8 +107,7 @@ public class Listener: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (singleton)
   
-  public static var shared = Listener()
-  private init() {}
+  public init() {}
   
   // ----------------------------------------------------------------------------
   // MARK: - Public methods
@@ -73,21 +116,20 @@ public class Listener: ObservableObject {
     if !local {
       _lanListener?.stop()
       _lanListener = nil
-//      removePackets(condition: { $0.source == .local } )
     }
     if !smartlink {
       _wanListener?.stop()
       _wanListener = nil
-//      removePackets(condition: { $0.source == .smartlink } )
     }
     removeAll()
     
     switch (local, smartlink) {
       
     case (true, true):
-      _lanListener = LanListener()
+      // Local & Smartlink
+      _lanListener = LanListener(self)
       _lanListener!.start()
-      _wanListener = WanListener()
+      _wanListener = WanListener(self)
       if await _wanListener!.start(smartlinkEmail, forceWanLogin) == false {
         _wanListener = nil
         return false
@@ -95,12 +137,14 @@ public class Listener: ObservableObject {
       return true
       
     case (true, false):
-      _lanListener = LanListener()
+      // Local only
+      _lanListener = LanListener(self)
       _lanListener!.start()
       return true
       
     case (false, true):
-      _wanListener = WanListener()
+      // Smartlink only
+      _wanListener = WanListener(self)
       if await _wanListener!.start(smartlinkEmail, forceWanLogin) == false {
         _wanListener = nil
         return false
@@ -108,12 +152,13 @@ public class Listener: ObservableObject {
       return true
       
     case (false, false):
+      // neither
       return true
     }
   }
   
   public func startWan(_ user: String, _ pwd: String) async -> Bool {
-    _wanListener = WanListener()
+    _wanListener = WanListener(self)
     let status = await _wanListener!.start(user: user, pwd: pwd)
     if status == false { _wanListener = nil }
     return status
@@ -170,9 +215,9 @@ public class Listener: ObservableObject {
 
     } else {
       guard nonGuiDefault != nil else { return nil }
-      for packet in packets where packet.serial == nonGuiDefault!.serial &&
-      packet.source.rawValue == nonGuiDefault!.source &&
-      packet.guiClientStations.contains(nonGuiDefault!.station!) {
+      for packet in packets where packet.serial == nonGuiDefault!.serial
+      && packet.source.rawValue == nonGuiDefault!.source
+      && packet.guiClientStations.contains(nonGuiDefault!.station!) {
         return packet
       }
     }
@@ -222,33 +267,32 @@ public class Listener: ObservableObject {
     let receivedGuiClients = parseGuiClients(newPacket)
     
     // identify and report any changes
-    checkGuiClients(receivedGuiClients, oldPacket)
+    checkGuiClients(receivedGuiClients, oldPacket, newPacket)
     
     // add/update packets & guiClients
     addUpdatePacket(newPacket, status: oldPacket == nil ? .newPacket : .changedPacket)
-    addUpdateGuiClients(receivedGuiClients)
   }
   
   /// Identify added and removed Gui Clients
   /// - Parameter newGuiClients: the latest GuiClients parse
-  func checkGuiClients(_ receivedGuiClients: IdentifiedArrayOf<GuiClient>, _ oldPacket: Packet? = nil) {
+  func checkGuiClients(_ receivedGuiClients: IdentifiedArrayOf<GuiClient>, _ oldPacket: Packet? = nil, _ newPacket: Packet) {
     
     if oldPacket == nil {
       for guiClient in receivedGuiClients {
-        appendGuiClient( guiClient )
+        newPacket.guiClients.append(guiClient)
         _clientStream( ClientEvent(.added, client: guiClient))
         log("Listener: guiClient ADDED, \(guiClient.station)", .info, #function, #file, #line)
       }
       
     } else {
-      for guiClient in receivedGuiClients.elements.added(to: guiClients.elements) {
-        appendGuiClient( guiClient )
+      for guiClient in receivedGuiClients.elements.added(to: newPacket.guiClients.elements) {
+        newPacket.guiClients.append(guiClient)
         _clientStream( ClientEvent(.added, client: guiClient))
         log("Listener: guiClient ADDED, \(guiClient.station)", .info, #function, #file, #line)
       }
       
-      for guiClient in receivedGuiClients.elements.removed(from: guiClients.elements) {
-        removeGuiClient( guiClient )
+      for guiClient in receivedGuiClients.elements.removed(from: newPacket.guiClients.elements) {
+        newPacket.guiClients.remove(guiClient)
         _clientStream( ClientEvent(.removed, client: guiClient))
         log("\(oldPacket!.source == .local ? "Lan" : "Wan") Listener: guiClient REMOVED, \(guiClient.station)", .info, #function, #file, #line)
       }
@@ -261,8 +305,7 @@ public class Listener: ObservableObject {
     _formatter.timeStyle = .long
     _formatter.dateStyle = .none
     for packet in packets where condition(packet) {
-      removePacket(packet)
-//      _packetStream( PacketEvent(.deleted, packet: packet) )
+      packets.remove(packet)
       log("\(packet.source == .local ? "Lan" : "Wan") Listener: packet REMOVED, \(packet.nickname) \(packet.serial) @ " + _formatter.string(from: packet.lastSeen), .info, #function, #file, #line)
     }
   }
@@ -291,7 +334,7 @@ public class Listener: ObservableObject {
   func getPickableStations() -> IdentifiedArrayOf<Pickable> {
     var pickables = IdentifiedArrayOf<Pickable>()
     for packet in packets {
-      for guiClient in guiClients {
+      for guiClient in packet.guiClients {
         pickables.append( Pickable(id: UUID(),
                                    packet: packet,
                                    station: guiClient.station))
@@ -302,17 +345,17 @@ public class Listener: ObservableObject {
   
   /// Determine if a GuiClient is fully populated
   /// - Parameter client: the guiClient
-  public func checkCompletion(_ client: GuiClient?) {
-    if let client {
-      
-      // log & notify if all essential properties are present
-      if client.handle != 0 && client.clientId != nil && client.program != "" && client.station != "" {
-        log("Packets: guiClient COMPLETED: \(client.handle.hex), \(client.station), \(client.program), \(client.clientId!)", .info, #function, #file, #line)
-        _clientStream( ClientEvent(.completed, client: client) )
-      }
-    }
-  }
-  
+//  public func checkCompletion(_ client: GuiClient?) {
+//    if let client {
+//      
+//      // log & notify if all essential properties are present
+//      if client.handle != 0 && client.clientId != nil && client.program != "" && client.station != "" {
+//        log("Packets: guiClient COMPLETED: \(client.handle.hex), \(client.station), \(client.program), \(client.clientId!)", .info, #function, #file, #line)
+//        _clientStream( ClientEvent(.completed, client: client) )
+//      }
+//    }
+//  }
+//  
   // ----------------------------------------------------------------------------
   // MARK: - Private methods
   
@@ -343,81 +386,21 @@ public class Listener: ObservableObject {
   }
   
   private func addUpdatePacket(_ packet: Packet, status: UpdateStatus) {
-    Task {
-      await MainActor.run {
-        packets[id: packet.serial + packet.publicIp] = packet
-        switch status {
-        case .timestampOnly:    return
-        case .newPacket, .changedPacket:
-          pickableRadios = getPickableRadios()
-          
-          // stream and log
-//          _packetStream( PacketEvent(status == .newPacket ? .added : .updated, packet: packet) )
-          log("\(packet.source == .local ? "Lan" : "Wan") Listener: packet \(status == .newPacket ? "ADDED" : "UPDATED"), \(packet.nickname) \(packet.serial)", .info, #function, #file, #line)
-        }
-      }
-    }
-  }
-  private func removePacket(_ packet: Packet) {
-    Task {
-      await MainActor.run {
-        packets.remove(id: packet.serial + packet.publicIp)
-        pickableRadios = getPickableRadios()
-      }
-    }
-  }
-  private func addUpdateGuiClient(_ guiClient: GuiClient) {
-    Task {
-      await MainActor.run {
-        self.guiClients[id: guiClient.id] = guiClient
-        pickableStations = getPickableStations()
-      }
-    }
-  }
-  private func addUpdateGuiClients(_ guiClients: IdentifiedArrayOf<GuiClient>) {
-    Task {
-      await MainActor.run {
-        self.guiClients = guiClients
-        pickableStations = getPickableStations()
-      }
-    }
-  }
-  private func appendGuiClient(_ guiClient: GuiClient) {
-    Task {
-      await MainActor.run {
-        guiClients.append(guiClient)
-        pickableStations = getPickableStations()
-      }
-    }
-  }
-  private func removeGuiClient(_ guiClient: GuiClient) {
-    Task {
-      await MainActor.run {
-        guiClients.remove(guiClient)
-        pickableStations = getPickableStations()
-      }
-    }
-  }
-  private func removePickables() {
-    Task {
-      await MainActor.run {
-        pickableRadios = IdentifiedArrayOf<Pickable>()
-        pickableStations = IdentifiedArrayOf<Pickable>()
-      }
+    packets[id: packet.serial + packet.publicIp] = packet
+    switch status {
+    case .timestampOnly:    return
+    case .newPacket, .changedPacket:
+      pickableRadios = getPickableRadios()
+      pickableStations = getPickableStations()
+      log("\(packet.source == .local ? "Lan" : "Wan") Listener: packet \(status == .newPacket ? "ADDED" : "UPDATED"), \(packet.nickname) \(packet.serial)", .info, #function, #file, #line)
     }
   }
   
   private func removeAll() {
-    Task {
-      await MainActor.run {
         packets = IdentifiedArrayOf<Packet>()
-        guiClients = IdentifiedArrayOf<GuiClient>()
         pickableRadios = IdentifiedArrayOf<Pickable>()
         pickableStations = IdentifiedArrayOf<Pickable>()
-      }
-    }
   }
-
 }
 
 // ----------------------------------------------------------------------------

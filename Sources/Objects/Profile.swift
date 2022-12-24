@@ -82,27 +82,44 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
     }
   }
   
-  public static func setProperty(radio: Radio, _ id: ProfileId, property: Property, value: Any) {
-    // FIXME: add commands
-  }
+  
+  
+  public func parseAndSend(_ property: Property, _ value: String = "") {
+    var newValue = value
+    
+    // alphabetical order
+    switch property {
+    case.current:       current = value.isEmpty ? "none" : value
+    default:            break
+    }
 
-//  public static func getProperty( _ id: ProfileId, property: Property) -> Any? {
-//    switch property {
-//    case .list:         return apiModel.profiles[id: id]!.list as Any
-//    case .current:      return apiModel.profiles[id: id]!.current as Any
-//    }
-//  }
-
-  /// Send a command to Set a Profile property
-  /// - Parameters:
-  ///   - radio:      a Radio instance
-  ///   - id:         the Id for the specified Amplifier
-  ///   - token:      the parse token
-  ///   - value:      the new value
-  private static func sendCommand(_ radio: Radio, _ id: ProfileId, _ token: Property, _ value: Any) {
-    // FIXME: add commands
+    send(property, newValue)
   }
   
+  public func send(_ property: Property, _ value: String) {
+    // Known tokens, in alphabetical order
+    switch property {
+    case .current:      profileCmd(id, "load", value)
+    default:            break
+    }
+  }
+        
+
+  
+  
+  
+  // ----------------------------------------------------------------------------
+  // MARK: - Private methods
+  
+  /// Send a command to Set a property
+  /// - Parameters:
+  ///   - token:      the parse token
+  ///   - separator:  String used between token and value
+  ///   - value:      the new value
+  private func profileCmd(_ id: String, _ cmd: String, _ value: Any) {
+    apiModel.send("profile " + id + " " + cmd + " " + "\(value)")
+  }
+
   /*
    "profile transmit save \"" + profile_name.Replace("*","") + "\""
    "profile transmit create \"" + profile_name.Replace("*", "") + "\""
@@ -114,10 +131,12 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
    "profile mic create \"" + profile_name.Replace("*", "") + "\""
    "profile global save \"" + profile_name + "\""
    "profile global delete \"" + profile_name + "\""
+   
    "profile mic load \"" + _profileMICSelection + "\""
    "profile tx load \"" + _profileTXSelection + "\""
    "profile display load \"" + _profileDisplaySelection + "\""
    "profile global load \"" + _profileGlobalSelection + "\""
+   
    "profile global info"
    "profile tx info"
    "profile mic info"

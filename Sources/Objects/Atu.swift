@@ -23,7 +23,7 @@ public final class Atu: ObservableObject {
 
   @Published public var enabled: Bool = false
   @Published public var memoriesEnabled: Bool = false
-  @Published public var status: String = ""
+  @Published public var status: Status = .none
   @Published public var usingMemory: Bool = false
   
   // ----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ public final class Atu: ObservableObject {
         
       case .enabled:          enabled = property.value.bValue
       case .memoriesEnabled:  memoriesEnabled = property.value.bValue
-      case .status:           status = property.value
+      case .status:           status = Status(rawValue: property.value) ?? .none
       case .usingMemory:      usingMemory = property.value.bValue
       }
     }

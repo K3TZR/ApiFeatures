@@ -31,10 +31,14 @@ public final class LanListener: NSObject, ObservableObject {
   private let _udpQ = DispatchQueue(label: "LanListener" + ".udpQ")
   private var _udpSocket: GCDAsyncUdpSocket!
 
+  let _listener: Listener!
+  
   // ----------------------------------------------------------------------------
   // MARK: - Initialization
   
-  init(port: UInt16 = 4992) {
+  init(_ listener: Listener, port: UInt16 = 4992) {
+    _listener = listener
+    
     super.init()
     
     _formatter.timeZone = .current
@@ -60,7 +64,9 @@ public final class LanListener: NSObject, ObservableObject {
     Timer.publish(every: checkInterval, on: .main, in: .default)
       .autoconnect()
       .sink { now in
-        Listener.shared.removePackets(condition: { $0.source == .local && abs($0.lastSeen.timeIntervalSince(now)) > timeout } )
+        Task {
+          await self._listener.removePackets(condition: { $0.source == .local && abs($0.lastSeen.timeIntervalSince(now)) > timeout } )
+        }
       }
       .store(in: &_cancellables)
   }
@@ -114,6 +120,8 @@ extension LanListener: GCDAsyncUdpSocketDelegate {
     guard let packet = parseVita(vita) else { return }
     
     // YES, process it
-    Listener.shared.processPacket(packet)
+    Task {
+      await _listener.processPacket(packet)
+    }
   }
 }
