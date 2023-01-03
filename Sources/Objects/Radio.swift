@@ -22,7 +22,7 @@ public final class Radio: Equatable, ObservableObject {
   public nonisolated static func == (lhs: Radio, rhs: Radio) -> Bool { lhs === rhs }
   
   public nonisolated static let kDaxChannels = ["None", "1", "2", "3", "4", "5", "6", "7", "8"]
-  public nonisolated static let kDaxIqChannels = ["None", "1", "2", "3", "4"]
+  public nonisolated static let kDaxIqChannels = [0, 1, 2, 3, 4]
   
   @AppStorage("guiClientId") public var guiClientId: String?
   public var clientInitialized = false
@@ -34,6 +34,7 @@ public final class Radio: Equatable, ObservableObject {
   public var hardwareVersion: String?
   
   @Published public internal(set) var antennaList = [AntennaPort]()
+  @Published public var addressType = "DHCP"
   public internal(set) var alpha = false
   public internal(set) var atuPresent = false
   public internal(set) var availablePanadapters = 0
@@ -42,7 +43,7 @@ public final class Radio: Equatable, ObservableObject {
   public internal(set) var bandPersistenceEnabled = false
   public internal(set) var binauralRxEnabled = false
   @Published public var boundClientId: String?
-  public internal(set) var calFreq: MHz = 0
+  @Published public var calFreq: MHz = 0
   public internal(set) var callsign = ""
   public internal(set) var chassisSerial = ""
   public internal(set) var daxIqAvailable = 0
@@ -55,8 +56,9 @@ public final class Radio: Equatable, ObservableObject {
   public internal(set) var filterCwLevel = 0
   public internal(set) var filterDigitalLevel = 0
   public internal(set) var filterVoiceLevel = 0
+  public internal(set) var flexControlEnabled = false
   public internal(set) var fpgaMbVersion = ""
-  public internal(set) var freqErrorPpb = 0
+  @Published public var freqErrorPpb = 0
   public internal(set) var frontSpeakerMute = false
   public internal(set) var fullDuplexEnabled = false
   public internal(set) var gateway = ""
@@ -103,7 +105,7 @@ public final class Radio: Equatable, ObservableObject {
   public internal(set) var state = ""
   public internal(set) var staticGateway = ""
   public internal(set) var staticIp = ""
-  public internal(set) var staticNetmask = ""
+  public internal(set) var staticMask = ""
   public internal(set) var station = ""
   public internal(set) var tnfsEnabled = false
   public internal(set) var tcxoPresent = false
@@ -114,6 +116,77 @@ public final class Radio: Equatable, ObservableObject {
     case some (handle: Handle)
   }
   
+  public var regionList = ["USA"]
+
+  public enum RadioProperty: String {
+    case alpha
+    case backlight
+    case bandPersistenceEnabled   = "band_persistence_enabled"
+    case binauralRxEnabled        = "binaural_rx"
+    case calFreq                  = "cal_freq"
+    case callsign
+    case daxIqAvailable           = "daxiq_available"
+    case daxIqCapacity            = "daxiq_capacity"
+    case enforcePrivateIpEnabled  = "enforce_private_ip_connections"
+    case flexControlEnabled
+    case freqErrorPpb             = "freq_error_ppb"
+    case frontSpeakerMute         = "front_speaker_mute"
+    case fullDuplexEnabled        = "full_duplex_enabled"
+    case headphoneGain            = "headphone_gain"
+    case headphoneMute            = "headphone_mute"
+    case lineoutGain              = "lineout_gain"
+    case lineoutMute              = "lineout_mute"
+    case lowLatencyDigital        = "low_latency_digital_modes"
+    case muteLocalAudio           = "mute_local_audio_when_remote"
+    case nickname
+    case panadapters
+    case pllDone                  = "pll_done"
+    case radioAuthenticated       = "radio_authenticated"
+    case remoteOnEnabled          = "remote_on_enabled"
+    case rttyMark                 = "rtty_mark_default"
+    case serverConnected          = "server_connected"
+    case slices
+    case snapTuneEnabled          = "snap_tune_enabled"
+    case tnfsEnabled              = "tnf_enabled"
+  }
+  public enum RadioSubProperty: String {
+    case filterSharpness          = "filter_sharpness"
+    case staticNetParams          = "static_net_params"
+    case oscillator
+  }
+  public enum InfoProperty: String {
+    case atuPresent               = "atu_present"
+    case callsign
+    case chassisSerial            = "chassis_serial"
+    case gateway
+    case gps
+    case ipAddress                = "ip"
+    case location
+    case macAddress               = "mac"
+    case model
+    case netmask
+    case name
+    case numberOfScus             = "num_scu"
+    case numberOfSlices           = "num_slice"
+    case numberOfTx               = "num_tx"
+    case options
+    case region
+    case screensaver
+    case softwareVersion          = "software_ver"
+  }
+  public enum StaticNetProperty: String {
+    case gateway
+    case ip
+    case mask = "netmask"
+  }
+  public enum FilterProperty: String {
+    case cw
+    case digital
+    case voice
+    case autoLevel                = "auto_level"
+    case level
+  }
+
   // ----------------------------------------------------------------------------
   // MARK: - Internal properties
   
@@ -511,31 +584,11 @@ extension Radio {
   /// - Parameters:
   ///   - properties:          a KeyValuesArray
   func parseInfoReply(_ properties: KeyValuesArray) {
-    enum Property: String {
-      case atuPresent               = "atu_present"
-      case callsign
-      case chassisSerial            = "chassis_serial"
-      case gateway
-      case gps
-      case ipAddress                = "ip"
-      case location
-      case macAddress               = "mac"
-      case model
-      case netmask
-      case name
-      case numberOfScus             = "num_scu"
-      case numberOfSlices           = "num_slice"
-      case numberOfTx               = "num_tx"
-      case options
-      case region
-      case screensaver
-      case softwareVersion          = "software_ver"
-    }
     
     // process each key/value pair, <key=value>
     for property in properties {
       // check for unknown Keys
-      guard let token = Property(rawValue: property.key) else {
+      guard let token = InfoProperty(rawValue: property.key) else {
         // log it and ignore the Key
         log("Radio: unknown info property, \(property.key) = \(property.value)", .warning, #function, #file, #line)
         continue
@@ -600,43 +653,8 @@ extension Radio {
   /// - Parameters:
   ///   - properties:      a KeyValuesArray
   func parse(_ properties: KeyValuesArray) {
-    enum Property: String {
-      case alpha
-      case backlight
-      case bandPersistenceEnabled   = "band_persistence_enabled"
-      case binauralRxEnabled        = "binaural_rx"
-      case calFreq                  = "cal_freq"
-      case callsign
-      case daxIqAvailable           = "daxiq_available"
-      case daxIqCapacity            = "daxiq_capacity"
-      case enforcePrivateIpEnabled  = "enforce_private_ip_connections"
-      case freqErrorPpb             = "freq_error_ppb"
-      case frontSpeakerMute         = "front_speaker_mute"
-      case fullDuplexEnabled        = "full_duplex_enabled"
-      case headphoneGain            = "headphone_gain"
-      case headphoneMute            = "headphone_mute"
-      case lineoutGain              = "lineout_gain"
-      case lineoutMute              = "lineout_mute"
-      case lowLatencyDigital        = "low_latency_digital_modes"
-      case muteLocalAudio           = "mute_local_audio_when_remote"
-      case nickname
-      case panadapters
-      case pllDone                  = "pll_done"
-      case radioAuthenticated       = "radio_authenticated"
-      case remoteOnEnabled          = "remote_on_enabled"
-      case rttyMark                 = "rtty_mark_default"
-      case serverConnected          = "server_connected"
-      case slices
-      case snapTuneEnabled          = "snap_tune_enabled"
-      case tnfsEnabled              = "tnf_enabled"
-    }
-    enum SubProperty: String {
-      case filterSharpness          = "filter_sharpness"
-      case staticNetParams          = "static_net_params"
-      case oscillator
-    }
     // separate by category
-    if let category = SubProperty(rawValue: properties[0].key) {
+    if let category = RadioSubProperty(rawValue: properties[0].key) {
       // drop the first property
       let adjustedProperties = Array(properties[1...])
       
@@ -651,7 +669,7 @@ extension Radio {
       // process each key/value pair, <key=value>
       for property in properties {
         // Check for Unknown Keys
-        guard let token = Property(rawValue: property.key)  else {
+        guard let token = RadioProperty(rawValue: property.key)  else {
           // log it and ignore the Key
           log("Radio: unknown property, \(property.key) = \(property.value)", .warning, #function, #file, #line)
           continue
@@ -687,6 +705,8 @@ extension Radio {
         case .slices:                   availableSlices = property.value.iValue
         case .snapTuneEnabled:          snapTuneEnabled = property.value.bValue
         case .tnfsEnabled:              tnfsEnabled = property.value.bValue
+          
+        case .flexControlEnabled:       flexControlEnabled = property.value.bValue
         }
       }
     }
@@ -705,19 +725,11 @@ extension Radio {
     var cw = false
     var digital = false
     var voice = false
-    
-    enum Property: String {
-      case cw
-      case digital
-      case voice
-      case autoLevel                = "auto_level"
-      case level
-    }
-    
+        
     // process each key/value pair, <key=value>
     for property in properties {
       // Check for Unknown Keys
-      guard let token = Property(rawValue: property.key.lowercased())  else {
+      guard let token = FilterProperty(rawValue: property.key.lowercased())  else {
         // log it and ignore the Key
         log("Radio: unknown filter property, \(property.key) = \(property.value)", .warning, #function, #file, #line)
         continue
@@ -745,15 +757,10 @@ extension Radio {
   /// - Parameters:
   ///   - properties:      a KeyValuesArray
   private func parseStaticNetProperties(_ properties: KeyValuesArray) {
-    enum Property: String {
-      case gateway
-      case ip
-      case netmask
-    }
     // process each key/value pair, <key=value>
     for property in properties {
       // Check for Unknown Keys
-      guard let token = Property(rawValue: property.key)  else {
+      guard let token = StaticNetProperty(rawValue: property.key)  else {
         // log it and ignore the Key
         log("Radio: unknown static property, \(property.key) = \(property.value)", .warning, #function, #file, #line)
         continue
@@ -763,7 +770,7 @@ extension Radio {
         
       case .gateway:  staticGateway = property.value
       case .ip:       staticIp = property.value
-      case .netmask:  staticNetmask = property.value
+      case .mask:     staticMask = property.value
       }
     }
   }
@@ -800,55 +807,127 @@ extension Radio {
       }
     }
   }
-  
-  /*
-   "radio oscillator " + _selectedOscillator.ToString()
-   "radio set rtty_mark_default=" + _rttyMarkDefault
-   "radio backlight " + _backlight
-   "radio set binaural_rx=" + Convert.ToByte(_binauralRX)
-   "radio set mute_local_audio_when_remote=" + Convert.ToByte(_isMuteLocalAudioWhenRemoteOn)
-   "radio set snap_tune_enabled=" + Convert.ToByte(_snapTune)
-   "radio filter_sharpness voice level=" + _filterSharpnessVoice
-   "radio filter_sharpness voice auto_level=" + Convert.ToByte(_filterSharpnessVoiceAuto)
-   "radio filter_sharpness cw level=" + _filterSharpnessCW
-   "radio filter_sharpness cw auto_level=" + Convert.ToByte(_filterSharpnessCWAuto)
-   "radio filter_sharpness digital level=" + _filterSharpnessDigital
-   "radio filter_sharpness digital auto_level=" + Convert.ToByte(_filterSharpnessDigitalAuto)
-   "radio reboot"
-   "radio set tnf_enabled=" + _tnfEnabled
-   "radio screensaver " + ScreensaverModeToString(_screensaver)
-   "radio callsign " + _callsign
-   "radio name " + _nickname
-   "radio set remote_on_enabled=" + Convert.ToByte(_remoteOnEnabled)
-   "radio set full_duplex_enabled=" + Convert.ToByte(_fullDuplexEnabled)
-   "radio pll_start"
-   "radio set freq_error_ppb=" + _freqErrorPPB
-   "radio set cal_freq=" + StringHelper.DoubleToString(_calFreq, "f6")
-   "radio gps install"
-   "radio gps uninstall"
-   "radio set enforce_private_ip_connections=" + Convert.ToByte(_enforcePrivateIPConnections)
-   */
 }
 
 extension Radio {
   
-//  public func parseAndSend(_ property: Property, _ value: String = "") {
-//    var newValue = value
-//
-//    // alphabetical order
-//    switch property {
-//
-//    }
-//    parse([(property.rawValue, newValue)])
+  public func parseAndSend(_ property: RadioProperty, _ value: String = "") {
+    var newValue = value
+
+    // alphabetical order
+    switch property {
+    case .calFreq:                  newValue = value
+    case .remoteOnEnabled:          newValue = (!remoteOnEnabled).as1or0
+    case .flexControlEnabled:       newValue = (!flexControlEnabled).as1or0
+    case .nickname:                 newValue = value
+    case .enforcePrivateIpEnabled:  newValue = (!enforcePrivateIpEnabled).as1or0
+    case .rttyMark:                 newValue = value
+    default:                      break
+
+    }
+    parse([(property.rawValue, newValue)])
+    send(property, newValue)
+  }
+
+  public func send(_ property: RadioProperty, _ value: String) {
+    // Known tokens, in alphabetical order
+    switch property {
+    case .calFreq:                    radioSetCmd(.calFreq, "=", value)
+    case .remoteOnEnabled:            radioSetCmd(.remoteOnEnabled, "=", value)
+    case .flexControlEnabled:         break
+    case .nickname:                   radioCmd("name", " ", value)
+    case .enforcePrivateIpEnabled:    radioSetCmd(.enforcePrivateIpEnabled, "=", value)
+    case .rttyMark:                   radioSetCmd(.rttyMark, "=", value)
+    default:                          break
+    }
+  }
+
+  public func parseAndSend(_ property: InfoProperty, _ value: String = "") {
+    var newValue = value
+
+    // alphabetical order
+    switch property {
+    case .region:                 newValue = value
+    case .screensaver:            newValue = value.lowercased()
+    case .callsign:               newValue = value
+    default:                      break
+
+    }
+    parseInfoReply([(property.rawValue, newValue)])
+    send(property, newValue)
+  }
+
+  public func send(_ property: InfoProperty, _ value: String) {
+    // Known tokens, in alphabetical order
+    switch property {
+    case .region:               break
+    case .screensaver:          infoCmd(.screensaver, " ", value)
+    case .callsign:             infoCmd(.callsign, " ", value)
+    default:                    break
+    }
+  }
+
+  public func parseAndSend(_ property: StaticNetProperty, _ value: String = "") {
+    var newValue = value
+
+    // alphabetical order
+    switch property {
+    case .ip:                   newValue = value
+    case .gateway:              newValue = value
+    case .mask:                 newValue = value
+    }
+    parseStaticNetProperties([(property.rawValue, newValue)])
 //    send(property, newValue)
-//  }
-//
-//  public func send(_ property: Property, _ value: String) {
-//    // Known tokens, in alphabetical order
-//    switch property {
-//    }
-//  }
+  }
+
+  public func parseAndSend(_ type: FilterProperty, _ property: FilterProperty, _ value: String = "") {
+    var newValue = value
+
+    // alphabetical order
+    switch property {
+    case .level:            newValue = value
+    case .autoLevel:
+      switch type {
+      case .cw:             newValue = (!filterCwAutoEnabled).as1or0
+      case .voice:          newValue = (!filterVoiceAutoEnabled).as1or0
+      case .digital:        newValue = (!filterDigitalAutoEnabled).as1or0
+      default:              break
+      }
+    default:                break
+
+    }
+    parseFilterProperties([(type.rawValue, "")])
+    parseFilterProperties([(property.rawValue, newValue)])
+    send(type, property, newValue)
+  }
+
+  public func send(_ type: FilterProperty, _ property: FilterProperty, _ value: String) {
+    // Known tokens, in alphabetical order
+    switch property {
+    case .level:            radioCmd("filter_sharpness " + type.rawValue + " " + property.rawValue, "=", value)
+    case .autoLevel:        radioCmd("filter_sharpness " + type.rawValue + " " + property.rawValue, "=", value)
+    default:                    break
+    }
+  }
+
   
+
+  public func radioStaticApply(_ staticIp: String, _ staticGateway: String, _ staticMask: String) {
+    self.staticIp = staticIp
+    self.staticGateway = staticGateway
+    self.staticMask = staticMask
+  }
+  public func radioDhcpCmd() {
+    apiModel.send("radio static_net_params" + " reset")
+  }
+  public func radioStaticCmd() {
+    apiModel.send("radio static_net_params ip" + "=\(staticIp) gateway" + "=\(staticGateway) netmask" + "=\(staticMask)")
+  }
+  public func radioCalibrateCmd() {
+    apiModel.send("radio pll_start")
+  }
+
+
   // ----------------------------------------------------------------------------
   // MARK: - Private methods
   
@@ -857,7 +936,45 @@ extension Radio {
   ///   - token:      the parse token
   ///   - separator:  String used between token and value
   ///   - value:      the new value
-//  private func transmitCmd(_ token: Property, _ separator: String, _ value: Any) {
-//    apiModel.send("transmit set " + token.rawValue + separator + "\(value)")
-//  }
+  private func radioSetCmd(_ token: RadioProperty, _ separator: String, _ value: Any) {
+    apiModel.send("radio set " + token.rawValue + separator + "\(value)")
+  }
+  private func radioCmd(_ token: RadioProperty, _ separator: String, _ value: Any) {
+    apiModel.send("radio " + token.rawValue + separator + "\(value)")
+  }
+  private func radioCmd(_ token: String, _ separator: String, _ value: Any) {
+    apiModel.send("radio " + token + separator + "\(value)")
+  }
+  private func infoCmd(_ token: InfoProperty, _ separator: String, _ value: Any) {
+    apiModel.send("radio " + token.rawValue + separator + "\(value)")
+  }
 }
+
+
+/*
+"radio oscillator " + _selectedOscillator.ToString()
+"radio set rtty_mark_default=" + _rttyMarkDefault
+"radio backlight " + _backlight
+"radio set binaural_rx=" + Convert.ToByte(_binauralRX)
+"radio set mute_local_audio_when_remote=" + Convert.ToByte(_isMuteLocalAudioWhenRemoteOn)
+"radio set snap_tune_enabled=" + Convert.ToByte(_snapTune)
+"radio filter_sharpness voice level=" + _filterSharpnessVoice
+"radio filter_sharpness voice auto_level=" + Convert.ToByte(_filterSharpnessVoiceAuto)
+"radio filter_sharpness cw level=" + _filterSharpnessCW
+"radio filter_sharpness cw auto_level=" + Convert.ToByte(_filterSharpnessCWAuto)
+"radio filter_sharpness digital level=" + _filterSharpnessDigital
+"radio filter_sharpness digital auto_level=" + Convert.ToByte(_filterSharpnessDigitalAuto)
+"radio reboot"
+"radio set tnf_enabled=" + _tnfEnabled
+"radio screensaver " + ScreensaverModeToString(_screensaver)
+"radio callsign " + _callsign
+"radio name " + _nickname
+"radio set remote_on_enabled=" + Convert.ToByte(_remoteOnEnabled)
+"radio set full_duplex_enabled=" + Convert.ToByte(_fullDuplexEnabled)
+"radio pll_start"
+"radio set freq_error_ppb=" + _freqErrorPPB
+"radio set cal_freq=" + StringHelper.DoubleToString(_calFreq, "f6")
+"radio gps install"
+"radio gps uninstall"
+"radio set enforce_private_ip_connections=" + Convert.ToByte(_enforcePrivateIPConnections)
+*/

@@ -165,28 +165,26 @@ public final class StreamModel: ObservableObject {
         }
         
       } else {
-        Task {
-          // NORMAL STATUS, is it for me?
-          if await apiModel.isForThisClient(properties) {
-            // YES
-            guard properties.count > 1 else {
-              log("ApiModel: invalid Stream message: \(statusMessage)", .warning, #function, #file, #line)
-              return
-            }
-            guard let token = Property(rawValue: properties[1].value) else {
-              // log it and ignore the Key
-              log("ApiModel: unknown Stream type: \(properties[1].value)", .warning, #function, #file, #line)
-              return
-            }
-            switch token {
-              
-            case .daxIq:      daxIqStreamStatus(properties)
-            case .daxMic:     daxMicAudioStreamStatus(properties)
-            case .daxRx:      daxRxAudioStreamStatus(properties)
-            case .daxTx:      daxTxAudioStreamStatus(properties)
-            case .remoteRx:   remoteRxAudioStreamStatus(properties)
-            case .remoteTx:   remoteTxAudioStreamStatus(properties)
-            }
+        // NORMAL STATUS, is it for me?
+        if apiModel.isForThisClient(properties) {
+          // YES
+          guard properties.count > 1 else {
+            log("ApiModel: invalid Stream message: \(statusMessage)", .warning, #function, #file, #line)
+            return
+          }
+          guard let token = Property(rawValue: properties[1].value) else {
+            // log it and ignore the Key
+            log("ApiModel: unknown Stream type: \(properties[1].value)", .warning, #function, #file, #line)
+            return
+          }
+          switch token {
+            
+          case .daxIq:      daxIqStreamStatus(properties)
+          case .daxMic:     daxMicAudioStreamStatus(properties)
+          case .daxRx:      daxRxAudioStreamStatus(properties)
+          case .daxTx:      daxTxAudioStreamStatus(properties)
+          case .remoteRx:   remoteRxAudioStreamStatus(properties)
+          case .remoteTx:   remoteTxAudioStreamStatus(properties)
           }
         }
       }
@@ -202,9 +200,7 @@ public final class StreamModel: ObservableObject {
   /// - Parameter id: a streamId
   func sendRemoveStream(id: StreamId) {
     // tell the Radio to remove the stream
-    Task {
-      await apiModel.radio?.send("stream remove \(id.hex)")
-    }
+    apiModel.radio?.send("stream remove \(id.hex)")
   }
 
   // ----------------------------------------------------------------------------
@@ -227,7 +223,7 @@ public final class StreamModel: ObservableObject {
     case .daxAudio:
       if let object = daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita)}
       if let object = daxMicAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
-      if let object = remoteRxAudioStreams[id: vita.streamId] { Task { await object.vitaProcessor(vita) } }
+      if let object = remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     case .daxReducedBw:
       if let object = daxRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
@@ -239,7 +235,7 @@ public final class StreamModel: ObservableObject {
       }
       
     case .opus:
-      if let object = remoteRxAudioStreams[id: vita.streamId] { Task { await object.vitaProcessor(vita) } }
+      if let object = remoteRxAudioStreams[id: vita.streamId] { object.vitaProcessor(vita) }
       
     default:
       // log the error
@@ -313,9 +309,7 @@ public final class StreamModel: ObservableObject {
       // add it if not already present
       if remoteRxAudioStreams[id: id] == nil { remoteRxAudioStreams.append( RemoteRxAudioStream(id) ) }
       // parse the properties
-      Task {
-        await remoteRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
-      }
+        remoteRxAudioStreams[id: id]!.parse( Array(properties.dropFirst(2)) )
     }
   }
 

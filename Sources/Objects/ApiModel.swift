@@ -15,22 +15,11 @@ import Shared
 import Tcp
 import Udp
 
-//public enum ConnectionError: String, Error {
-//  case instantiation = "Failed to create Radio object"
-//  case connection = "Failed to connect to Radio"
-//  case replyError = "Reply with error"
-//  case tcpConnect = "Tcp Failed to connect"
-//  case udpBind = "Udp Failed to bind"
-//  case wanConnect = "WanConnect Failed"
-//  case wanValidation = "WanValidation Failed"
-//}
-
 // ----------------------------------------------------------------------------
 // MARK: - Dependency decalarations
 
 extension ApiModel: DependencyKey {
   public static let liveValue = ApiModel()
-//  public static let previewValue = ApiModel()
   public static var previewValue: ApiModel {
     let model = ApiModel()
     model.equalizers.append(Equalizer("rxsc"))
@@ -39,14 +28,15 @@ extension ApiModel: DependencyKey {
     model.transmit.txFilterHigh = 2000
     model.transmit.micSelection = "Mic2"
     model.profiles.append(Profile("mic"))
-    model.profiles[id: "mic"]!.list = ["Profile1", "Profile2"]
-    model.profiles[id: "mic"]!.current = "Profile2"
+    model.profiles[id: "mic"]!.list = [ProfileName("Profile1"), ProfileName("Profile2")]
+    model.profiles[id: "mic"]!.current = ProfileName("Profile2")
     model.profiles.append(Profile("tx"))
-    model.profiles[id: "tx"]!.list = ["Profile3", "Profile4"]
-    model.profiles[id: "tx"]!.current = "Profile4"
+    model.profiles[id: "tx"]!.list = [ProfileName("Profile3"), ProfileName("Profile4")]
+    model.profiles[id: "tx"]!.current = ProfileName("Profile4")
     model.radio = Radio(Packet())
     model.radio?.micList = ["Mic1", "Mic2", "Mic3"]
     model.atu.status = .tuneBypass
+    model.clientInitialized = true
     return model
   }
 }
@@ -63,7 +53,6 @@ public final class ApiModel: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization (Singleton)
   
-//  public static var shared = ApiModel()
   public init() {
     subscribeToMessages()
     subscribeToTcpStatus()
@@ -76,7 +65,7 @@ public final class ApiModel: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
   
-  @Published public var clientInitialized: Bool = false
+  @Published public var clientInitialized: Bool = false { didSet {activePanadapter = panadapters.first} }
   @Published public var radio: Radio?
   @Published public var activeEqualizer: Equalizer?
   @Published public var activeSlice: Slice?
@@ -302,6 +291,33 @@ public final class ApiModel: ObservableObject {
     log("Api: Disconnect, Objects removed", .debug, #function, #file, #line)
   }
 
+  // ----------------------------------------------------------------------------
+  // MARK: - Public methods (profiles)
+  
+  public func profileDelete(_ profileType: String, _ profileNameId: UUID) {
+    if let nameToRemove = profiles[id: profileType]?.list[id: profileNameId]?.name {
+      send("profile \(profileType) " + "delete \"\(nameToRemove)\"")
+    }
+    profiles[id: profileType]?.list.remove(id: profileNameId)
+  }
+    
+  public func profileCreate(_ profileType: String, _ newName: String) {
+    profiles[id: profileType]?.list.append(ProfileName(newName))
+    send("profile \(profileType) " + "create \"\(newName)\"")
+  }
+  
+  public func profileLoad(_ profileType: String, _ profileNameId: UUID) {
+    if let nameToLoad = profiles[id: profileType]?.list[id: profileNameId]?.name {
+      send("profile \(profileType) " + "load \"\(nameToLoad)\"")
+    }
+  }
+  
+  public func profileReset(_ profileType: String, _ profileNameId: UUID) {
+    if let nameToReset = profiles[id: profileType]?.list[id: profileNameId]?.name {
+      send("profile \(profileType) " + "reset \"\(nameToReset)\"")
+    }
+  }
+
   /// Determine if status is for this client
   /// - Parameters:
   ///   - properties:     a KeyValuesArray
@@ -327,7 +343,7 @@ public final class ApiModel: ObservableObject {
     
     switch type {
     case .amplifier:            amplifierStatus(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kRemoved))
-    case .atu:                  atu.parse( Array(statusMessage.keyValuesArray().dropFirst(1) ))
+    case .atu:                  atu.parse( Array(statusMessage.keyValuesArray() ))
     case .bandSetting:          bandSettingStatus(Array(statusMessage.keyValuesArray().dropFirst(1) ), !statusMessage.contains(Shared.kRemoved))
     case .client:               preProcessClient(statusMessage.keyValuesArray(), !statusMessage.contains(Shared.kDisconnected))
     case .cwx:                  cwx.parse( Array(statusMessage.keyValuesArray().dropFirst(1) ))

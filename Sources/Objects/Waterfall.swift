@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ComposableArchitecture
 import CoreGraphics
 
 import Shared
@@ -26,6 +27,8 @@ public final class Waterfall: Identifiable, ObservableObject {
     self.id = id    
   }
   
+  @Dependency(\.apiModel) var apiModel
+  
   // ----------------------------------------------------------------------------
   // MARK: - Published properties
   
@@ -41,7 +44,7 @@ public final class Waterfall: Identifiable, ObservableObject {
   @Published public var lineDuration = 0
   @Published public var panadapterId: PanadapterId?
 
-  @Published public var selectedGradient = GradientEnum.Basic.rawValue
+  @Published public var selectedGradient = "Basic"
 
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -80,14 +83,23 @@ public final class Waterfall: Identifiable, ObservableObject {
   public let id: WaterfallId
   public var initialized = false
   
-  public enum GradientEnum: String, CaseIterable {
-    case Basic
-    case Dark
-    case Deuteranopia
-    case Grayscale
-    case Purple
-    case Tritanopia
-  }
+//  public enum GradientEnum: String, CaseIterable {
+//    case Basic
+//    case Dark
+//    case Deuteranopia
+//    case Grayscale
+//    case Purple
+//    case Tritanopia
+//  }
+
+  public static let gradients = [
+    "Basic",
+    "Dark",
+    "Deuteranopia",
+    "Grayscale",
+    "Purple",
+    "Tritanopia"
+  ]
 
   
   // ----------------------------------------------------------------------------
@@ -130,15 +142,69 @@ public final class Waterfall: Identifiable, ObservableObject {
   public func setIsStreaming() {
     Task { await MainActor.run { isStreaming = true }}
   }
-
-  /// Send a command to Set a Waterfall property
-  /// - Parameters:
-  ///   - radio:      a Radio instance
-  ///   - id:         the Id for the specified Waterfall
-  ///   - token:      the parse token
-  ///   - value:      the new value
-  private static func sendCommand(_ radio: Radio, _ id: WaterfallId, _ token: Property, _ value: Any) {
-//    radio.send("display panafall set " + "\(id.hex) " + token.rawValue + "=\(value)")
+  
+  
+  
+  
+  
+  public func parseAndSend(_ property: Property, _ value: String = "") {
+    var newValue = value
+    
+    // alphabetical order
+    switch property {
+    case .autoBlackEnabled:     newValue = (!autoBlackEnabled).as1or0
+    case .blackLevel:           newValue = value
+    case .colorGain:            newValue = value
+    case .gradientIndex:        newValue = value
+    case .lineDuration:         newValue = value
+      // the following are ignored here
+    case .clientHandle, .panadapterId, .available, .band, .bandwidth, .bandZoomEnabled, .capacity, .center, .daxIq, .daxIqChannel,
+        .daxIqRate, .loopA, .loopB, .rfGain, .rxAnt, .segmentZoomEnabled, .wide, .xPixels, .xvtr:  break
+    }
+    
+    parse([(property.rawValue, newValue)])
+    send(property, newValue)
   }
   
+  public func send(_ property: Property, _ value: String) {
+    // Known tokens, in alphabetical order
+    switch property {
+    case .autoBlackEnabled:     waterfallCmd(.autoBlackEnabled, value)
+    case .blackLevel:           waterfallCmd(.blackLevel, value)
+    case .colorGain:            waterfallCmd(.colorGain, value)
+    case .gradientIndex:        waterfallCmd(.gradientIndex, value)
+    case .lineDuration:         waterfallCmd(.lineDuration, value)
+      // the following are ignored here
+    case .clientHandle, .panadapterId, .available, .band, .bandwidth, .bandZoomEnabled, .capacity, .center, .daxIq, .daxIqChannel,
+        .daxIqRate, .loopA, .loopB, .rfGain, .rxAnt, .segmentZoomEnabled, .wide, .xPixels, .xvtr:  break
+    }
+  }
+  
+  // ----------------------------------------------------------------------------
+  // MARK: - Private methods
+  
+  /// Send a command to Set a Waterfall property
+  /// - Parameters:
+  ///   - token:      the parse token
+  ///   - value:      the new value
+  private func waterfallCmd(_ token: Property, _ value: Any) {
+    apiModel.send("display panafall set " + "\(id.hex) " + token.rawValue + "=\(value)")
+  }
 }
+
+/*
+   display panafall set 0x" + _stream_id.ToString("X") + " rxant=" + _rxant);
+   display panafall set 0x" + _stream_id.ToString("X") + " rfgain=" + _rfGain);
+   display panafall set 0x" + _stream_id.ToString("X") + " daxiq_channel=" + _daxIQChannel);
+   display panafall set 0x" + _stream_id.ToString("X") + " fps=" + value);
+   display panafall set 0x" + _stream_id.ToString("X") + " average=" + value);
+   display panafall set 0x" + _stream_id.ToString("x") + " weighted_average=" + Convert.ToByte(_weightedAverage));
+   display panafall set 0x" + _stream_id.ToString("X") + " loopa=" + Convert.ToByte(_loopA));
+   display panafall set 0x" + _stream_id.ToString("X") + " loopb=" + Convert.ToByte(_loopB));
+   display panafall set 0x" + _stream_id.ToString("X") + " line_duration=" + _fallLineDurationMs.ToString());
+   display panafall set 0x" + _stream_id.ToString("X") + " black_level=" + _fallBlackLevel.ToString());
+   display panafall set 0x" + _stream_id.ToString("X") + " color_gain=" + _fallColorGain.ToString());
+   display panafall set 0x" + _stream_id.ToString("X") + " auto_black=" + Convert.ToByte(_autoBlackLevelEnable));
+   display panafall set 0x" + _stream_id.ToString("X") + " gradient_index=" + _fallGradientIndex.ToString());
+   display panafall remove 0x" + _stream_id.ToString("X"));
+ */

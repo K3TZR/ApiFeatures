@@ -112,20 +112,20 @@ public class Listener: ObservableObject {
   // ----------------------------------------------------------------------------
   // MARK: - Public methods
   
-  public func setConnectionMode(_ local: Bool, _ smartlink: Bool, _ smartlinkEmail: String = "", _ forceWanLogin: Bool = false) async -> Bool {
-    if !local {
+  public func setConnectionMode(_ mode: ConnectionMode, _ smartlinkEmail: String = "", _ forceWanLogin: Bool = false) async -> Bool {
+    if mode == .smartlink || mode == .none {
       _lanListener?.stop()
       _lanListener = nil
     }
-    if !smartlink {
+    if mode == .local || mode == .none {
       _wanListener?.stop()
       _wanListener = nil
     }
     removeAll()
     
-    switch (local, smartlink) {
+    switch mode {
       
-    case (true, true):
+    case .both:
       // Local & Smartlink
       _lanListener = LanListener(self)
       _lanListener!.start()
@@ -136,13 +136,13 @@ public class Listener: ObservableObject {
       }
       return true
       
-    case (true, false):
+    case .local:
       // Local only
       _lanListener = LanListener(self)
       _lanListener!.start()
       return true
       
-    case (false, true):
+    case .smartlink:
       // Smartlink only
       _wanListener = WanListener(self)
       if await _wanListener!.start(smartlinkEmail, forceWanLogin) == false {
@@ -151,7 +151,7 @@ public class Listener: ObservableObject {
       }
       return true
       
-    case (false, false):
+    case .none:
       // neither
       return true
     }

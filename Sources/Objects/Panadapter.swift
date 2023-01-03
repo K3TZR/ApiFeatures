@@ -6,6 +6,7 @@
 //  Copyright (c) 2015 Douglas Adams, K3TZR
 //
 
+import ComposableArchitecture
 import Foundation
 
 import FlexErrors
@@ -25,6 +26,8 @@ public final class Panadapter: Identifiable, ObservableObject {
   public init(_ id: PanadapterId) {
     self.id = id
   }
+  
+  @Dependency(\.apiModel) var apiModel
   
   // ----------------------------------------------------------------------------
   // MARK: - Published properties
@@ -77,7 +80,7 @@ public final class Panadapter: Identifiable, ObservableObject {
   // MARK: - Public properties
   
   public let id: PanadapterId
-
+  
   public let daxIqChoices = Radio.kDaxIqChannels
   public var initialized = false
   
@@ -197,52 +200,52 @@ public final class Panadapter: Identifiable, ObservableObject {
     isStreaming = value
   }
   
-  public static func setPanadapterProperty(radio: Radio, id: PanadapterId, property: Property, value: Any) {
-    switch property {
-    case .antList:                sendCommand( radio, id, .antList, value)
-    case .average:                sendCommand( radio, id, .average, value)
-    case .band:                   sendCommand( radio, id, .band, value)
-    case .bandwidth:              sendCommand( radio, id, .bandwidth, (value as! Hz).hzToMhz)
-    case .bandZoomEnabled:        sendCommand( radio, id, .bandZoomEnabled, (value as! Bool).as1or0)
-    case .center:                 sendCommand( radio, id, .center, (value as! Hz).hzToMhz)
-    case .clientHandle:           sendCommand( radio, id, .clientHandle, value)
-    case .daxIq:                  sendCommand( radio, id, .daxIqChannel, value)
-    case .daxIqChannel:           sendCommand( radio, id, .daxIqChannel, value)
-    case .fps:                    sendCommand( radio, id, .fps, value)
-    case .loopAEnabled:           sendCommand( radio, id, .loopAEnabled, (value as! Bool).as1or0)
-    case .loopBEnabled:           sendCommand( radio, id, .loopBEnabled, (value as! Bool).as1or0)
-    case .maxBw:                  sendCommand( radio, id, .maxBw, (value as! Hz).hzToMhz)
-    case .maxDbm:                 sendCommand( radio, id, .maxDbm, value)
-    case .minBw:                  sendCommand( radio, id, .minBw, (value as! Hz).hzToMhz)
-    case .minDbm:                 sendCommand( radio, id, .minDbm, value)
-    case .preamp:                 sendCommand( radio, id, .preamp, value)
-    case .rfGain:                 sendCommand( radio, id, .rfGain, value)
-    case .rxAnt:                  sendCommand( radio, id, .rxAnt, value)
-    case .segmentZoomEnabled:     sendCommand( radio, id, .segmentZoomEnabled, (value as! Bool).as1or0)
-    case .waterfallId:            sendCommand( radio, id, .waterfallId, value)
-    case .wide:                   sendCommand( radio, id, .wide, (value as! Bool).as1or0)
-    case .weightedAverageEnabled: sendCommand( radio, id, .weightedAverageEnabled, (value as! Bool).as1or0)
-    case .wnbEnabled:             sendCommand( radio, id, .wnbEnabled, (value as! Bool).as1or0)
-    case .wnbLevel:               sendCommand( radio, id, .wnbLevel, value)
-    case .wnbUpdating:            sendCommand( radio, id, .wnbUpdating, (value as! Bool).as1or0)
-    case .xPixels:                sendCommand( radio, id, "xpixels", value)
-    case .xvtrLabel:              sendCommand( radio, id, .xvtrLabel, value)
-    case .yPixels:                sendCommand( radio, id, "ypixels", value)
-      
-    case .available, .capacity, .daxIqRate:                         break // ignored by Panadapter
-    case .n1mmSpectrumEnable, .n1mmAddress, .n1mmPort, .n1mmRadio:  break // not sent in status messages
-    }
-    
-    //    Task {
-    //      switch property {
-    //      case .band:
-    //        await Model.shared.panadapters[id: id]?.parseProperties( [(key: property.rawValue, value: "\((value as! Bool).as1or0)")] )
-    
-    //      default:
-    //        await Model.shared.panadapters[id: id]?.parseProperties( [(key: property.rawValue, value: "\(value)")] )
-    //      }
-    //    }
-  }
+  //  public static func setPanadapterProperty(radio: Radio, id: PanadapterId, property: Property, value: Any) {
+  //    switch property {
+  //    case .antList:                sendCommand( radio, id, .antList, value)
+  //    case .average:                sendCommand( radio, id, .average, value)
+  //    case .band:                   sendCommand( radio, id, .band, value)
+  //    case .bandwidth:              sendCommand( radio, id, .bandwidth, (value as! Hz).hzToMhz)
+  //    case .bandZoomEnabled:        sendCommand( radio, id, .bandZoomEnabled, (value as! Bool).as1or0)
+  //    case .center:                 sendCommand( radio, id, .center, (value as! Hz).hzToMhz)
+  //    case .clientHandle:           sendCommand( radio, id, .clientHandle, value)
+  //    case .daxIq:                  sendCommand( radio, id, .daxIqChannel, value)
+  //    case .daxIqChannel:           sendCommand( radio, id, .daxIqChannel, value)
+  //    case .fps:                    sendCommand( radio, id, .fps, value)
+  //    case .loopAEnabled:           sendCommand( radio, id, .loopAEnabled, (value as! Bool).as1or0)
+  //    case .loopBEnabled:           sendCommand( radio, id, .loopBEnabled, (value as! Bool).as1or0)
+  //    case .maxBw:                  sendCommand( radio, id, .maxBw, (value as! Hz).hzToMhz)
+  //    case .maxDbm:                 sendCommand( radio, id, .maxDbm, value)
+  //    case .minBw:                  sendCommand( radio, id, .minBw, (value as! Hz).hzToMhz)
+  //    case .minDbm:                 sendCommand( radio, id, .minDbm, value)
+  //    case .preamp:                 sendCommand( radio, id, .preamp, value)
+  //    case .rfGain:                 sendCommand( radio, id, .rfGain, value)
+  //    case .rxAnt:                  sendCommand( radio, id, .rxAnt, value)
+  //    case .segmentZoomEnabled:     sendCommand( radio, id, .segmentZoomEnabled, (value as! Bool).as1or0)
+  //    case .waterfallId:            sendCommand( radio, id, .waterfallId, value)
+  //    case .wide:                   sendCommand( radio, id, .wide, (value as! Bool).as1or0)
+  //    case .weightedAverageEnabled: sendCommand( radio, id, .weightedAverageEnabled, (value as! Bool).as1or0)
+  //    case .wnbEnabled:             sendCommand( radio, id, .wnbEnabled, (value as! Bool).as1or0)
+  //    case .wnbLevel:               sendCommand( radio, id, .wnbLevel, value)
+  //    case .wnbUpdating:            sendCommand( radio, id, .wnbUpdating, (value as! Bool).as1or0)
+  //    case .xPixels:                sendCommand( radio, id, "xpixels", value)
+  //    case .xvtrLabel:              sendCommand( radio, id, .xvtrLabel, value)
+  //    case .yPixels:                sendCommand( radio, id, "ypixels", value)
+  //
+  //    case .available, .capacity, .daxIqRate:                         break // ignored by Panadapter
+  //    case .n1mmSpectrumEnable, .n1mmAddress, .n1mmPort, .n1mmRadio:  break // not sent in status messages
+  //    }
+  //
+  //    //    Task {
+  //    //      switch property {
+  //    //      case .band:
+  //    //        await Model.shared.panadapters[id: id]?.parseProperties( [(key: property.rawValue, value: "\((value as! Bool).as1or0)")] )
+  //
+  //    //      default:
+  //    //        await Model.shared.panadapters[id: id]?.parseProperties( [(key: property.rawValue, value: "\(value)")] )
+  //    //      }
+  //    //    }
+  //  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Private methods
@@ -266,19 +269,57 @@ public final class Panadapter: Identifiable, ObservableObject {
     rfGainStep = rfGainInfo[2].iValue
   }
   
+  
+  public func parseAndSend(_ property: Property, _ value: String = "") {
+    var newValue = value
+    
+    // alphabetical order
+    switch property {
+    case .average:                  newValue = value
+    case .daxIqChannel:             newValue = value == "None" ? "0" : value
+    case .fps:                      newValue = value
+    case .loopAEnabled:             newValue = (!loopAEnabled).as1or0
+    case .rxAnt:                    newValue = value
+    case .rfGain:                   newValue = value
+    case .weightedAverageEnabled:   newValue = (!weightedAverageEnabled).as1or0
+    default:                        break
+    }
+    
+    parse([(property.rawValue, newValue)])
+    send(property, newValue)
+  }
+  
+  public func send(_ property: Property, _ value: String) {
+    // Known tokens, in alphabetical order
+    
+    switch property {
+    case .average:                  panadapterCmd(.average, value)
+    case .daxIqChannel:             panadapterCmd(.daxIqChannel, value)
+    case .fps:                      panadapterCmd(.fps, value)
+    case .loopAEnabled:             panadapterCmd(.loopAEnabled, value)
+    case .rxAnt:                    panadapterCmd(.rxAnt, value)
+    case .rfGain:                   panadapterCmd(.rfGain, value)
+    case .weightedAverageEnabled:   panadapterCmd(.weightedAverageEnabled, value)
+    default:                        break
+    }
+  }
+  
+  public func setFillLevel(_ level: Int) {
+    fillLevel = level
+  }
+  
   // ----------------------------------------------------------------------------
   // MARK: - Private Static methods
   
-  /// Send a command to Set a Panadapter property
+  /// Send a command to Set a property
   /// - Parameters:
-  ///   - radio:      a Radio instance
-  ///   - id:         the Id for the specified Waterfall
   ///   - token:      the parse token
+  ///   - separator:  String used between token and value
   ///   - value:      the new value
-  private static func sendCommand(_ radio: Radio, _ id: PanadapterId, _ token: Property, _ value: Any) {
-//    radio.send("display panafall set " + "\(id.hex) " + token.rawValue + "=\(value)")
+  private func panadapterCmd(_ token: Property, _ value: Any) {
+    apiModel.send("display pan set " + id.hex + " " + token.rawValue + "=\(value)")
   }
-  
+
   /// Send a command to Set a Panadapter property
   /// - Parameters:
   ///   - radio:      a Radio instance

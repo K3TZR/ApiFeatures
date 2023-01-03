@@ -6,6 +6,7 @@
 //  Copyright © 2017 Douglas Adams. All rights reserved.
 //
 
+import ComposableArchitecture
 import Foundation
 
 import Shared
@@ -20,6 +21,8 @@ public final class Interlock: ObservableObject {
   // MARK: - Initialization
 
   public init() {}
+
+  @Dependency(\.apiModel) var apiModel
   
   // ----------------------------------------------------------------------------
   // MARK: - Public properties
@@ -144,13 +147,63 @@ public final class Interlock: ObservableObject {
     }
   }
   
-  /// Set a property
-  /// - Parameters:
-  ///   - radio:      the current radio
-  ///   - token:      an Interlock Token
-  ///   - value:      the new value
-  public static func setProperty(radio: Radio, _ token: Property, value: Any) {
-    // FIXME: add commands
+  public func parseAndSend(_ property: Property, _ value: String = "") {
+    var newValue = value
+    
+    // alphabetical order
+    switch property {
+      
+    case .accTxEnabled:             newValue = (!accTxEnabled).as1or0
+    case .accTxDelay:               newValue = value
+    case .accTxReqEnabled:          newValue = (!accTxReqEnabled).as1or0
+    case .accTxReqPolarity:         newValue = value
+    case .amplifier:                newValue = value
+    case .rcaTxReqEnabled:          newValue = value
+    case .rcaTxReqPolarity:         newValue = value
+    case .reason:                   newValue = value
+    case .source:                   newValue = value
+    case .state:                    newValue = value
+    case .timeout:                  newValue = value
+    case .txAllowed:                newValue = (!txAllowed).as1or0
+    case .txClientHandle:           newValue = value
+    case .txDelay:                  newValue = value
+    case .tx1Delay:                 newValue = value
+    case .tx1Enabled:               newValue = (!tx1Enabled).as1or0
+    case .tx2Delay:                 newValue = value
+    case .tx2Enabled:               newValue = (!tx2Enabled).as1or0
+    case .tx3Delay:                 newValue = value
+    case .tx3Enabled:               newValue = (!tx3Enabled).as1or0
+      
+    }
+    parse([(property.rawValue, newValue)])
+    send(property, newValue)
+  }
+
+  public func send(_ property: Property, _ value: String) {
+      // Known tokens, in alphabetical order
+      switch property {
+        
+      case .accTxEnabled:           interlockCmd(.accTxEnabled, value)
+      case .accTxDelay:             interlockCmd(.accTxEnabled, value)
+      case .accTxReqEnabled:        interlockCmd(.accTxEnabled, value)
+      case .accTxReqPolarity:       interlockCmd(.accTxEnabled, value)
+      case .amplifier:              interlockCmd(.accTxEnabled, value)
+      case .rcaTxReqEnabled:        interlockCmd(.accTxEnabled, value)
+      case .rcaTxReqPolarity:       interlockCmd(.accTxEnabled, value)
+      case .reason:                 interlockCmd(.accTxEnabled, value)
+      case .source:                 interlockCmd(.accTxEnabled, value)
+      case .state:                  interlockCmd(.accTxEnabled, value)
+      case .timeout:                interlockCmd(.accTxEnabled, value)
+      case .txAllowed:              interlockCmd(.accTxEnabled, value)
+      case .txClientHandle:         interlockCmd(.accTxEnabled, value)
+      case .txDelay:                interlockCmd(.accTxEnabled, value)
+      case .tx1Delay:               interlockCmd(.accTxEnabled, value)
+      case .tx1Enabled:             interlockCmd(.accTxEnabled, value)
+      case .tx2Delay:               interlockCmd(.accTxEnabled, value)
+      case .tx2Enabled:             interlockCmd(.accTxEnabled, value)
+      case .tx3Delay:               interlockCmd(.accTxEnabled, value)
+      case .tx3Enabled:             interlockCmd(.accTxEnabled, value)
+      }
   }
 
   // ----------------------------------------------------------------------------
@@ -158,11 +211,10 @@ public final class Interlock: ObservableObject {
 
   /// Send a command to Set an InterlockToken property
   /// - Parameters:
-  ///   - radio:      a Radio instance
   ///   - token:      the parse token
   ///   - value:      the new value
-  private static func sendCommand(_ radio: Radio, _ token: Property, _ value: Any) {
-    // FIXME: add commands
+  private func interlockCmd(_ token: Property, _ value: Any) {
+    apiModel.send("interlock " + token.rawValue + "=\(value)")
   }
   
   /*

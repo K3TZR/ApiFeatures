@@ -343,7 +343,7 @@ extension Radio {
   }
   
   public func staticNetParamsSet(callback: ReplyHandler? = nil) {
-    send("radio static_net_params" + " ip=\(staticIp) gateway=\(staticGateway) netmask=\(staticNetmask)")
+    send("radio static_net_params" + " ip=\(staticIp) gateway=\(staticGateway) netmask=\(staticMask)")
   }
   
   // ----------------------------------------------------------------------------

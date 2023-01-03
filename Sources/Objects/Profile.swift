@@ -11,6 +11,16 @@ import Foundation
 
 import Shared
 
+public struct ProfileName: Identifiable, Hashable {
+  public var id: UUID
+  public var name: String
+  
+  public init(_ name: String) {
+    self.id = UUID()
+    self.name = name
+  }
+}
+
 // Profile struct implementation
 //      creates a Profiles instance to be used by a Client to support the
 //      processing of the profiles. Profile structs are added, removed and
@@ -36,10 +46,10 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   public let id: ProfileId
   public var initialized = false
 
-  @Published public var current: ProfileName = ""
-  @Published public var list = [ProfileName]()
+  @Published public var current: ProfileName = ProfileName("")
+  @Published public var list = IdentifiedArrayOf<ProfileName>()
   
-  public enum Property: String {
+  public enum ProfileProperty: String {
     case list = "list"
     case current = "current"
   }
@@ -48,17 +58,17 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   // MARK: - Public Instance methods
   
   /// Parse Profile key/value pairs
-  /// - Parameter properties:       a KeyValuesArray
+  /// - Parameter statusMessage:       String
   public func parse(_ statusMessage: String?) {
     guard statusMessage != nil else { return }
     
     let properties = statusMessage!.keyValuesArray(delimiter: " ")
-    let key = properties[1].key
+    let id = properties[0].key
         
     // check for unknown Key
-    guard let token = Property(rawValue: key) else {
+    guard let token = ProfileProperty(rawValue: properties[1].key) else {
       // log it and ignore the Key
-      log("Profile \(id): unknown property, \(key)", .warning, #function, #file, #line)
+      log("Profile \(id): unknown property, \(properties[1].key)", .warning, #function, #file, #line)
       return
     }
     // known keys
@@ -68,10 +78,16 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
       let suffix = String(statusMessage!.suffix(from: i))
 
       let values = suffix.valuesArray(delimiter: "^")
-      list = values.last == "" ? Array(values.dropLast()) : values
-//      print(list, i)
+      var valuesList = IdentifiedArrayOf<ProfileName>()
+      for value in values {
+        if !value.isEmpty { valuesList.append(ProfileName(value)) }
+      }
+      list = valuesList
       
-    case .current:    current = properties[1].value.isEmpty ? "none" : properties[1].value
+    case .current:
+      let i = statusMessage!.index(statusMessage!.firstIndex(of: "=")!, offsetBy: 1)
+      let suffix = String(statusMessage!.suffix(from: i))
+      current = suffix.isEmpty ? ProfileName("none") : ProfileName(suffix)
       
     }
     // is it initialized?
@@ -82,30 +98,32 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
     }
   }
   
-  
-  
-  public func parseAndSend(_ property: Property, _ value: String = "") {
-    var newValue = value
-    
-    // alphabetical order
-    switch property {
-    case.current:       current = value.isEmpty ? "none" : value
-    default:            break
-    }
-
-    send(property, newValue)
-  }
-  
-  public func send(_ property: Property, _ value: String) {
-    // Known tokens, in alphabetical order
-    switch property {
-    case .current:      profileCmd(id, "load", value)
-    default:            break
-    }
-  }
+//  public func setCurrent(_ value: ProfileName) {
+//    profileCmd(id, "load", value)
+//  }
+//
+//  public func parseAndSend(_ property: ProfileProperty, _ value: String = "") {
+//    var newValue = value
+//
+//    // alphabetical order
+//    switch property {
+//    case .current:        newValue = value.isEmpty ? "none" : value
+//    default:              break
+//    }
+//
+//    parse("\(id) current=\(value)")
+//    send(property, newValue)
+//  }
+//
+//  public func send(_ property: ProfileProperty, _ value: String) {
+//    // Known tokens, in alphabetical order
+//    switch property {
+//    case .current:      profileCmd(id, "load", value)
+//    default:            break
+//    }
+//  }
         
 
-  
   
   
   // ----------------------------------------------------------------------------
@@ -117,7 +135,7 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   ///   - separator:  String used between token and value
   ///   - value:      the new value
   private func profileCmd(_ id: String, _ cmd: String, _ value: Any) {
-    apiModel.send("profile " + id + " " + cmd + " " + "\(value)")
+    apiModel.send("profile " + id + " " + cmd + " \"" + "\(value)\"")
   }
 
   /*
@@ -134,12 +152,12 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
    
    "profile mic load \"" + _profileMICSelection + "\""
    "profile tx load \"" + _profileTXSelection + "\""
-   "profile display load \"" + _profileDisplaySelection + "\""
+//   "profile display load \"" + _profileDisplaySelection + "\""
    "profile global load \"" + _profileGlobalSelection + "\""
    
    "profile global info"
    "profile tx info"
    "profile mic info"
-   "profile display info"
+//   "profile display info"
    */
 }
