@@ -26,7 +26,10 @@ public final class Pinger {
   // ----------------------------------------------------------------------------
   // MARK: - Private properties
   
+  private var _isInitialized = false
+  private var _initializationCount = 0
   private var _lastPingRxTime: Date!
+  private var _pingCount = 0
   private let _pingQ = DispatchQueue(label: "Radio.pingQ")
   private var _pingTimer: DispatchSourceTimer!
   private weak var _radio: Radio?
@@ -34,8 +37,9 @@ public final class Pinger {
   // ----------------------------------------------------------------------------
   // MARK: - Initialization
   
-  public init(pingInterval: Int = 1, pingTimeout: Double = 10) {
+  public init(pingInterval: Int = 1, pingTimeout: Double = 10, initializationCount: Int = 2) {
     _lastPingRxTime = Date(timeIntervalSinceNow: 0)
+    _initializationCount = initializationCount
     //    Task(priority: .background) {
     //      await startPinging(interval: pingInterval, timeout: pingTimeout)
     //    }
@@ -76,12 +80,18 @@ public final class Pinger {
         
       } else {
         Task(priority: .low) {
+          if !_isInitialized {
+            _pingCount += 1
+            if _pingCount == _initializationCount {
+              _isInitialized = true
+              await MainActor.run { apiModel.clientInitialized = true }
+            }
+          }
           await MainActor.run { apiModel.send("ping", replyTo: self.pingReply) }
         }
       }
     }
     )
-    
     // start the timer
     _pingTimer.resume()
   }

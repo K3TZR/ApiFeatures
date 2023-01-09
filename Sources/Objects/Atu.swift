@@ -6,6 +6,7 @@
 //  Copyright © 2017 Douglas Adams. All rights reserved.
 //
 
+import ComposableArchitecture
 import Foundation
 
 import Shared
@@ -50,9 +51,11 @@ public final class Atu: ObservableObject {
   }
   
   // ----------------------------------------------------------------------------
-  // MARK: - Initialization (singleton)
+  // MARK: - Initialization
 
   public init() {}
+  
+  @Dependency(\.apiModel) var apiModel
   
   // ----------------------------------------------------------------------------
   // MARK: - Public methods
@@ -85,36 +88,29 @@ public final class Atu: ObservableObject {
     }
   }
   
-//  public func update(_ property: (Property, String)) {
-//    parse([(key: property.0.rawValue, value: property.1)])
-//  }
-//
-//  public func update(_ properties: [(Property, String)]) async {
-//    for property in properties {
-//      update((property.0, property.1))
-//    }
-//  }
-//
-//  public func get(_ property: Property) async -> Any {
-//    var value: Any
-//
-//    switch property {
-//    case .enabled:          value = enabled
-//    case .memoriesEnabled:  value = memoriesEnabled
-//    case .status:           value = status
-//    case .usingMemory:      value = usingMemory
-//    }
-//    return value
-//  }
-//
-//  public func get(_ properties: [Property]) async -> [Any] {
-//    var values = [Any]()
-//
-//    for property in properties {
-//      await values.append(get(property))
-//    }
-//    return values
-//  }
+  public func setAndSend(_ property: Property, _ value: String = "") {
+    var newValue = value
+    
+    // alphabetical order
+    switch property {
+      
+    case .enabled:             newValue = value
+    case .memoriesEnabled:     newValue = value
+    default:                   return
+    }
+    parse([(property.rawValue, newValue)])
+    send(property, newValue)
+  }
+
+  public func send(_ property: Property, _ value: String) {
+      // Known tokens, in alphabetical order
+      switch property {
+        
+      case .enabled:              atuCmd(value == "1" ? "start" : "bypass")
+      case .memoriesEnabled:      atuSetCmd(.memoriesEnabled, "=", value)
+      default:                    return
+      }
+  }
 
   
   
@@ -125,30 +121,22 @@ public final class Atu: ObservableObject {
   
   
   
-  /// Set a property
-  /// - Parameters:
-  ///   - radio:      the current radio
-  ///   - property:   an Atu Token
-  ///   - value:      the new value
-//  public static func setProperty(radio: Radio, _ property: Property, value: Any) {
-//    // FIXME: add commands
-//
-//    private func atuCmd(_ radio: Radio, _ token: Property, _ value: Any) {
-//      radio.send("atu " + token.rawValue + "=\(value)")
-//    }
-//    private func atuSetCmd(_ radio: Radio, _ token: Property, _ value: Any) {
-//      radio.send("atu set " + token.rawValue + "=\(value)")
-//    }
+  private func atuCmd(_ command: String) {
+    apiModel.send("atu " + command)
+  }
+  private func atuSetCmd(_ token: Property, _ separator: String, _ value: Any) {
+    apiModel.send("atu set " + token.rawValue + separator + "\(value)")
+  }
+  
+  
+//  public  func clear() {
+//    apiModel.send("atu clear")
 //  }
-
-//  public static func clear(_ radio: Radio, callback: ReplyHandler? = nil) {
-//    radio.send("atu clear", replyTo: callback)
+//  public static func start(_ radio: Radio) {
+//    apiModel.send("atu start")
 //  }
-//  public static func start(_ radio: Radio, callback: ReplyHandler? = nil) {
-//    radio.send("atu start", replyTo: callback)
-//  }
-//  public static func bypass(_ radio: Radio, callback: ReplyHandler? = nil) {
-//    radio.send("atu bypass", replyTo: callback)
+//  public static func bypass(_ radio: Radio) {
+//    apiModel.send("atu bypass")
 //  }
   
   /*

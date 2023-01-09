@@ -11,15 +11,15 @@ import Foundation
 
 import Shared
 
-public struct ProfileName: Identifiable, Hashable {
-  public var id: UUID
-  public var name: String
-  
-  public init(_ name: String) {
-    self.id = UUID()
-    self.name = name
-  }
-}
+//public struct ProfileName: Identifiable, Hashable {
+//  public var id: UUID
+//  public var name: String
+//
+//  public init(_ name: String) {
+//    self.id = UUID()
+//    self.name = name
+//  }
+//}
 
 // Profile struct implementation
 //      creates a Profiles instance to be used by a Client to support the
@@ -46,8 +46,8 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
   public let id: ProfileId
   public var initialized = false
 
-  @Published public var current: ProfileName = ProfileName("")
-  @Published public var list = IdentifiedArrayOf<ProfileName>()
+  @Published public var current: String = ""
+  @Published public var list = [String]()
   
   public enum ProfileProperty: String {
     case list = "list"
@@ -78,16 +78,16 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
       let suffix = String(statusMessage!.suffix(from: i))
 
       let values = suffix.valuesArray(delimiter: "^")
-      var valuesList = IdentifiedArrayOf<ProfileName>()
+      var valuesList = [String]()
       for value in values {
-        if !value.isEmpty { valuesList.append(ProfileName(value)) }
+        if !value.isEmpty { valuesList.append(value) }
       }
       list = valuesList
       
     case .current:
       let i = statusMessage!.index(statusMessage!.firstIndex(of: "=")!, offsetBy: 1)
       let suffix = String(statusMessage!.suffix(from: i))
-      current = suffix.isEmpty ? ProfileName("none") : ProfileName(suffix)
+      current = suffix.isEmpty ? "none" : suffix
       
     }
     // is it initialized?
@@ -98,10 +98,12 @@ public final class Profile: Identifiable, Equatable, ObservableObject {
     }
   }
   
-//  public func setCurrent(_ value: ProfileName) {
-//    profileCmd(id, "load", value)
-//  }
-//
+  
+  public func setCurrent(_ name: String) {
+    current = name
+    profileCmd(id, "load", name)
+  }
+
 //  public func parseAndSend(_ property: ProfileProperty, _ value: String = "") {
 //    var newValue = value
 //

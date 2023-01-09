@@ -95,6 +95,7 @@ public final class Panadapter: Identifiable, ObservableObject {
     case clientHandle               = "client_handle"
     case daxIq                      = "daxiq"
     case daxIqChannel               = "daxiq_channel"
+    case fillLevel
     case fps
     case loopAEnabled               = "loopa"
     case loopBEnabled               = "loopb"
@@ -186,6 +187,7 @@ public final class Panadapter: Identifiable, ObservableObject {
         
       case .available, .capacity, .daxIqRate, .xPixels, .yPixels:     break // ignored by Panadapter
       case .n1mmSpectrumEnable, .n1mmAddress, .n1mmPort, .n1mmRadio:  break // not sent in status messages
+      case .fillLevel:                                                break // not sent in status messages
       }
     }
     // is it initialized?∫

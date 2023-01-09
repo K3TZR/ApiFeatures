@@ -147,15 +147,35 @@ public final class Interlock: ObservableObject {
     }
   }
   
-  public func parseAndSend(_ property: Property, _ value: String = "") {
+  
+  
+  public func setOnly(_ property: Property, _ value: String = "") {
+    parse([(property.rawValue, value)])
+  }
+
+  public func sendOnly(_ property: Property) {
+    // Known tokens, in alphabetical order
+    switch property {
+    case .accTxDelay:     interlockCmd(.accTxDelay, accTxDelay)
+    case .txDelay:        interlockCmd(.txDelay, txDelay)
+    case .tx1Delay:       interlockCmd(.tx1Delay, tx1Delay)
+    case .tx2Delay:       interlockCmd(.tx2Delay, tx2Delay)
+    case .tx3Delay:       interlockCmd(.tx3Delay, tx3Delay)
+    case .timeout:        interlockCmd(.timeout, timeout)
+    default:              break
+    }
+  }
+
+  
+  public func setAndSend(_ property: Property, _ value: String = "") {
     var newValue = value
     
     // alphabetical order
     switch property {
       
-    case .accTxEnabled:             newValue = (!accTxEnabled).as1or0
+    case .accTxEnabled:             newValue = value
     case .accTxDelay:               newValue = value
-    case .accTxReqEnabled:          newValue = (!accTxReqEnabled).as1or0
+    case .accTxReqEnabled:          newValue = value
     case .accTxReqPolarity:         newValue = value
     case .amplifier:                newValue = value
     case .rcaTxReqEnabled:          newValue = value
@@ -164,15 +184,15 @@ public final class Interlock: ObservableObject {
     case .source:                   newValue = value
     case .state:                    newValue = value
     case .timeout:                  newValue = value
-    case .txAllowed:                newValue = (!txAllowed).as1or0
+    case .txAllowed:                newValue = value
     case .txClientHandle:           newValue = value
     case .txDelay:                  newValue = value
     case .tx1Delay:                 newValue = value
-    case .tx1Enabled:               newValue = (!tx1Enabled).as1or0
+    case .tx1Enabled:               newValue = value
     case .tx2Delay:                 newValue = value
-    case .tx2Enabled:               newValue = (!tx2Enabled).as1or0
+    case .tx2Enabled:               newValue = value
     case .tx3Delay:                 newValue = value
-    case .tx3Enabled:               newValue = (!tx3Enabled).as1or0
+    case .tx3Enabled:               newValue = value
       
     }
     parse([(property.rawValue, newValue)])
@@ -184,25 +204,25 @@ public final class Interlock: ObservableObject {
       switch property {
         
       case .accTxEnabled:           interlockCmd(.accTxEnabled, value)
-      case .accTxDelay:             interlockCmd(.accTxEnabled, value)
-      case .accTxReqEnabled:        interlockCmd(.accTxEnabled, value)
-      case .accTxReqPolarity:       interlockCmd(.accTxEnabled, value)
-      case .amplifier:              interlockCmd(.accTxEnabled, value)
-      case .rcaTxReqEnabled:        interlockCmd(.accTxEnabled, value)
-      case .rcaTxReqPolarity:       interlockCmd(.accTxEnabled, value)
-      case .reason:                 interlockCmd(.accTxEnabled, value)
-      case .source:                 interlockCmd(.accTxEnabled, value)
-      case .state:                  interlockCmd(.accTxEnabled, value)
-      case .timeout:                interlockCmd(.accTxEnabled, value)
-      case .txAllowed:              interlockCmd(.accTxEnabled, value)
-      case .txClientHandle:         interlockCmd(.accTxEnabled, value)
-      case .txDelay:                interlockCmd(.accTxEnabled, value)
-      case .tx1Delay:               interlockCmd(.accTxEnabled, value)
-      case .tx1Enabled:             interlockCmd(.accTxEnabled, value)
-      case .tx2Delay:               interlockCmd(.accTxEnabled, value)
-      case .tx2Enabled:             interlockCmd(.accTxEnabled, value)
-      case .tx3Delay:               interlockCmd(.accTxEnabled, value)
-      case .tx3Enabled:             interlockCmd(.accTxEnabled, value)
+      case .accTxDelay:             interlockCmd(.accTxDelay, value)
+      case .accTxReqEnabled:        interlockCmd(.accTxReqEnabled, value)
+      case .accTxReqPolarity:       interlockCmd(.accTxReqPolarity, value)
+      case .amplifier:              interlockCmd(.amplifier, value)
+      case .rcaTxReqEnabled:        interlockCmd(.rcaTxReqEnabled, value)
+      case .rcaTxReqPolarity:       interlockCmd(.rcaTxReqPolarity, value)
+      case .reason:                 interlockCmd(.reason, value)
+      case .source:                 interlockCmd(.source, value)
+      case .state:                  interlockCmd(.state, value)
+      case .timeout:                interlockCmd(.timeout, value)
+      case .txAllowed:              interlockCmd(.txAllowed, value)
+      case .txClientHandle:         interlockCmd(.txClientHandle, value)
+      case .txDelay:                interlockCmd(.txDelay, value)
+      case .tx1Delay:               interlockCmd(.tx1Delay, value)
+      case .tx1Enabled:             interlockCmd(.tx1Enabled, value)
+      case .tx2Delay:               interlockCmd(.tx2Delay, value)
+      case .tx2Enabled:             interlockCmd(.tx2Enabled, value)
+      case .tx3Delay:               interlockCmd(.tx3Delay, value)
+      case .tx3Enabled:             interlockCmd(.tx3Enabled, value)
       }
   }
 

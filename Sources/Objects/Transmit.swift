@@ -49,7 +49,6 @@ public final class Transmit: ObservableObject {
   @Published public var daxEnabled = false
   @Published public var frequency: Hz = 0
   @Published public var hwAlcEnabled = false
-  @Published public var inhibit = false
   @Published public var maxPowerLevel = 0
   @Published public var meterInRxEnabled = false
   @Published public var micAccEnabled = false
@@ -69,6 +68,7 @@ public final class Transmit: ObservableObject {
   @Published public var txFilterChanges = false
   @Published public var txFilterHigh = 0
   @Published public var txFilterLow = 0
+  @Published public var inhibit = false
   @Published public var txInWaterfallEnabled = false
   @Published public var txMonitorAvailable = false
   @Published public var txMonitorEnabled = false
@@ -97,7 +97,7 @@ public final class Transmit: ObservableObject {
     case daxEnabled               = "dax"
     case frequency                = "freq"
     case hwAlcEnabled             = "hwalc_enabled"
-    case inhibit
+    case inhibit                  = "inhibit"
     case maxPowerLevel            = "max_power_level"
     case meterInRxEnabled         = "met_in_rx"
     case micAccEnabled            = "mic_acc"                       // "acc"
@@ -162,7 +162,6 @@ public final class Transmit: ObservableObject {
       case .daxEnabled:             daxEnabled = property.value.bValue
       case .frequency:              frequency = property.value.mhzToHz
       case .hwAlcEnabled:           hwAlcEnabled = property.value.bValue
-      case .inhibit:                inhibit = property.value.bValue
       case .maxPowerLevel:          maxPowerLevel = property.value.iValue
       case .meterInRxEnabled:       meterInRxEnabled = property.value.bValue
       case .micAccEnabled:          micAccEnabled = property.value.bValue
@@ -180,6 +179,7 @@ public final class Transmit: ObservableObject {
       case .txFilterChanges:        txFilterChanges = property.value.bValue
       case .txFilterHigh:           txFilterHigh = property.value.iValue
       case .txFilterLow:            txFilterLow = property.value.iValue
+      case .inhibit:                inhibit = property.value.bValue
       case .txInWaterfallEnabled:   txInWaterfallEnabled = property.value.bValue
       case .txMonitorAvailable:     txMonitorAvailable = property.value.bValue
       case .txMonitorEnabled:       txMonitorEnabled = property.value.bValue
@@ -200,37 +200,49 @@ public final class Transmit: ObservableObject {
     }
   }
   
+  public func set(_ property: Property, _ value: String = "") {
+    parse([(property.rawValue, value)])
+  }
 
-  public func parseAndSend(_ property: Property, _ value: String = "") {
+  public func send(_ property: Property) {
+    // Known tokens, in alphabetical order
+    switch property {
+    case .txFilterHigh:   transmitCmd("set", "filter_high", "=", txFilterHigh)
+    case .txFilterLow:    transmitCmd("set", "filter_low", "=", txFilterLow)
+    default:              return
+    }
+  }
+
+  
+
+  public func setAndSend(_ property: Property, _ value: String = "") {
     var newValue = value
     
     // alphabetical order
     switch property {
       
     case .amCarrierLevel:         newValue = value
-    case .companderEnabled:       newValue = (!companderEnabled).as1or0
+    case .companderEnabled:       newValue = value
     case .companderLevel:         newValue = value
-    case .cwBreakInEnabled:       newValue = (!cwBreakInEnabled).as1or0
+    case .cwBreakInEnabled:       newValue = value
     case .cwBreakInDelay:         newValue = value
-    case .cwIambicEnabled:        newValue = (!cwIambicEnabled).as1or0
-    case .cwIambicMode:           newValue = (value == "A" ? "0" : "1")
-    case .cwlEnabled:             newValue = (value == "Lower").as1or0
-    case .cwMonitorGain:          newValue = value
+    case .cwIambicEnabled:        newValue = value
+    case .cwIambicMode:           newValue = value
+    case .cwlEnabled:             newValue = value
     case .cwMonitorPan:           newValue = value
     case .cwPitch:                newValue = value
-    case .cwSidetoneEnabled:      newValue = (!cwSidetoneEnabled).as1or0
+    case .cwSidetoneEnabled:      newValue = value
     case .cwSpeed:                newValue = value
-    case .cwSwapPaddles:          newValue = (!cwSwapPaddles).as1or0
-    case .cwSyncCwxEnabled:       newValue = (!cwSyncCwxEnabled).as1or0
+    case .cwSwapPaddles:          newValue = value
+    case .cwSyncCwxEnabled:       newValue = value
     case .daxEnabled:             newValue = value
 //    case .frequency:              frequency = property.value.mhzToHz
-//    case .hwAlcEnabled:           hwAlcEnabled = property.value.bValue
-//    case .inhibit:                inhibit = property.value.bValue
+    case .hwAlcEnabled:           newValue = value
     case .maxPowerLevel:          newValue = value
-    case .meterInRxEnabled:       newValue = (!meterInRxEnabled).as1or0
+    case .meterInRxEnabled:       newValue = value
     case .micAccEnabled:          newValue = value
-    case .micBoostEnabled:        newValue = (!micBoostEnabled).as1or0
-    case .micBiasEnabled:         newValue = (!micBiasEnabled).as1or0
+    case .micBoostEnabled:        newValue = value
+    case .micBiasEnabled:         newValue = value
     case .micLevel:               newValue = value
     case .micSelection:           newValue = value
 //    case .rawIqEnabled:           rawIqEnabled = property.value.bValue
@@ -243,18 +255,18 @@ public final class Transmit: ObservableObject {
 //    case .txFilterChanges:        txFilterChanges = property.value.bValue
     case .txFilterHigh:           newValue = value
     case .txFilterLow:            newValue = value
-    case .txInWaterfallEnabled:   newValue = (!txInWaterfallEnabled).as1or0
+    case .inhibit:                newValue = value
+    case .txInWaterfallEnabled:   newValue = value
 //    case .txMonitorAvailable:     txMonitorAvailable = property.value.bValue
     case .txMonitorEnabled:       newValue = value
 //    case .txRfPowerChanges:       txRfPowerChanges = property.value.bValue
 //    case .txSliceMode:            txSliceMode = property.value
-    case .tune:                   newValue = (!tune).as1or0
+    case .tune:                   newValue = value
     case .tunePower:              newValue = value
-    case .voxEnabled:             newValue = (!voxEnabled).as1or0
+    case .voxEnabled:             newValue = value
     case .voxDelay:               newValue = value
     case .voxLevel:               newValue = value
-    default:
-      break
+    default:                      return
     }
     
     parse([(property.rawValue, newValue)])
@@ -282,8 +294,7 @@ public final class Transmit: ObservableObject {
       case .cwSyncCwxEnabled:       cwCmd(property, " ", value)
       case .daxEnabled:             transmitCmd("set", property, "=", value)
 //      case .frequency:              frequency = property.value.mhzToHz
-//      case .hwAlcEnabled:           hwAlcEnabled = property.value.bValue
-//      case .inhibit:                inhibit = property.value.bValue
+      case .hwAlcEnabled:           transmitCmd("set", property, "=", value)
       case .maxPowerLevel:          transmitCmd("set", property, "=", value)
       case .meterInRxEnabled:       transmitCmd("set", property, "=", value)
       case .micAccEnabled:          micCmd("acc", " ", value)
@@ -301,6 +312,7 @@ public final class Transmit: ObservableObject {
 //      case .txFilterChanges:        txFilterChanges = property.value.bValue
       case .txFilterHigh:           transmitCmd("set", "filter_high", "=", value)
       case .txFilterLow:            transmitCmd("set", "filter_low", "=", value)
+      case .inhibit:                transmitCmd("set", property, "=", value)
       case .txInWaterfallEnabled:   transmitCmd("set", property, "=", value)
 //      case .txMonitorAvailable:     txMonitorAvailable = property.value.bValue
       case .txMonitorEnabled:       transmitCmd("set", "mon", "=", value)
@@ -311,8 +323,7 @@ public final class Transmit: ObservableObject {
       case .voxEnabled:             transmitCmd("set", property, "=", value)
       case .voxDelay:               transmitCmd("set", property, "=", value)
       case .voxLevel:               transmitCmd("set", property, "=", value)
-      default:
-        break
+      default:                      return
       }
   }
   
@@ -320,9 +331,9 @@ public final class Transmit: ObservableObject {
     apiModel.send("xmit \(value.as1or0)")
   }
   
-  public func sendAtu(_ token: String, _ separator: String = "", _ value: String = "") {
-    apiModel.send("atu " + token + separator + value)
-  }
+//  public func sendAtu(_ token: String, _ separator: String = "", _ value: String = "") {
+//    apiModel.send("atu " + token + separator + value)
+//  }
   
   // ----------------------------------------------------------------------------
   // MARK: - Private methods

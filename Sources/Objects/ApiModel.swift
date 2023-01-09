@@ -28,11 +28,11 @@ extension ApiModel: DependencyKey {
     model.transmit.txFilterHigh = 2000
     model.transmit.micSelection = "Mic2"
     model.profiles.append(Profile("mic"))
-    model.profiles[id: "mic"]!.list = [ProfileName("Profile1"), ProfileName("Profile2")]
-    model.profiles[id: "mic"]!.current = ProfileName("Profile2")
+    model.profiles[id: "mic"]!.list = ["Profile1", "Profile2"]
+    model.profiles[id: "mic"]!.current = "Profile2"
     model.profiles.append(Profile("tx"))
-    model.profiles[id: "tx"]!.list = [ProfileName("Profile3"), ProfileName("Profile4")]
-    model.profiles[id: "tx"]!.current = ProfileName("Profile4")
+    model.profiles[id: "tx"]!.list = ["Profile3", "Profile4"]
+    model.profiles[id: "tx"]!.current = "Profile4"
     model.radio = Radio(Packet())
     model.radio?.micList = ["Mic1", "Mic2", "Mic3"]
     model.atu.status = .tuneBypass
@@ -264,7 +264,7 @@ public final class ApiModel: ObservableObject {
     radio?.stopPinging()
     log("Api: Pinging STOPPED", .debug, #function, #file, #line)
 
-    radio?.nickname = ""
+    radio?.name = ""
     radio?.smartSdrMB = ""
     radio?.psocMbtrxVersion = ""
     radio?.psocMbPa100Version = ""
@@ -292,30 +292,75 @@ public final class ApiModel: ObservableObject {
   }
 
   // ----------------------------------------------------------------------------
+  // MARK: - Public methods (equalizers)
+  
+  public func equalizerEnable(_ equalizerId: String) {
+    equalizers[id: equalizerId]?.eqEnabled.toggle()
+  }
+  
+  public func equalizerFlat(_ equalizerId: String) {
+    equalizers[id: equalizerId]?.hz63 = 0
+    equalizers[id: equalizerId]?.hz125 = 0
+    equalizers[id: equalizerId]?.hz250 = 0
+    equalizers[id: equalizerId]?.hz500 = 0
+    equalizers[id: equalizerId]?.hz1000 = 0
+    equalizers[id: equalizerId]?.hz2000 = 0
+    equalizers[id: equalizerId]?.hz4000 = 0
+    equalizers[id: equalizerId]?.hz8000 = 0
+  }
+
+  public func equalizerLevel(_ equalizerId: String, _ level: Equalizer.Property, _ value: Int) {
+    switch level {
+    case .hz63, .Hz63:        equalizers[id: equalizerId]?.hz63 = value
+    case .hz125, .Hz125:      equalizers[id: equalizerId]?.hz63 = value
+    case .hz250, .Hz250:      equalizers[id: equalizerId]?.hz250 = value
+    case .hz500, .Hz500:      equalizers[id: equalizerId]?.hz500 = value
+    case .hz1000, .Hz1000:    equalizers[id: equalizerId]?.hz1000 = value
+    case .hz2000, .Hz2000:    equalizers[id: equalizerId]?.hz2000 = value
+    case .hz4000, .Hz4000:    equalizers[id: equalizerId]?.hz4000 = value
+    case .hz8000, .Hz8000:    equalizers[id: equalizerId]?.hz8000 = value
+    case .eqEnabled:          break
+    }
+  }
+
+  // ----------------------------------------------------------------------------
+  // MARK: - Public methods (panadapter)
+  
+  public func panadapterProperty(_ property: Panadapter.Property, _ value: String) {
+    if let id = activePanadapter?.id, let panadapter = panadapters[id: id] {
+      switch property {
+      case .band:           panadapter.band = value
+      case .rxAnt:          panadapter.rxAnt = value
+      case .loopAEnabled:   panadapter.loopAEnabled = value == "1" ? true : false
+      case .loopBEnabled:   panadapter.loopBEnabled = value == "1" ? true : false
+      case .rfGain:         panadapter.rfGain = Int(value) ?? 0
+      default:              return
+      }
+      
+      send("display pan set \(id.toHex()) \(property.rawValue)=\(value)")
+    }
+  }
+  
+  // ----------------------------------------------------------------------------
   // MARK: - Public methods (profiles)
   
-  public func profileDelete(_ profileType: String, _ profileNameId: UUID) {
-    if let nameToRemove = profiles[id: profileType]?.list[id: profileNameId]?.name {
-      send("profile \(profileType) " + "delete \"\(nameToRemove)\"")
-    }
-    profiles[id: profileType]?.list.remove(id: profileNameId)
+  public func profileDelete(_ profileType: String, _ profileName: String) {
+    send("profile \(profileType) " + "delete \"\(profileName)\"")
+    profiles[id: profileType]?.list.removeAll(where: { $0 == profileName })
   }
     
-  public func profileCreate(_ profileType: String, _ newName: String) {
-    profiles[id: profileType]?.list.append(ProfileName(newName))
-    send("profile \(profileType) " + "create \"\(newName)\"")
+  public func profileCreate(_ profileType: String, _ profileName: String) {
+    profiles[id: profileType]?.list.append(profileName)
+    send("profile \(profileType) " + "create \"\(profileName)\"")
   }
   
-  public func profileLoad(_ profileType: String, _ profileNameId: UUID) {
-    if let nameToLoad = profiles[id: profileType]?.list[id: profileNameId]?.name {
-      send("profile \(profileType) " + "load \"\(nameToLoad)\"")
-    }
+  public func profileLoad(_ profileType: String, _ profileName: String) {
+    profiles[id: profileType]?.current = profileName
+    send("profile \(profileType) " + "load \"\(profileName)\"")
   }
   
-  public func profileReset(_ profileType: String, _ profileNameId: UUID) {
-    if let nameToReset = profiles[id: profileType]?.list[id: profileNameId]?.name {
-      send("profile \(profileType) " + "reset \"\(nameToReset)\"")
-    }
+  public func profileReset(_ profileType: String, _ profileName: String) {
+    send("profile \(profileType) " + "reset \"\(profileName)\"")
   }
 
   /// Determine if status is for this client
@@ -334,6 +379,20 @@ public final class ApiModel: ObservableObject {
       return clientHandle == connectionHandle
     }
     return false
+  }
+
+  
+  // ----------------------------------------------------------------------------
+  // MARK: - Public methods (waterfall)
+  
+  public func waterfallProperty(_ property: Waterfall.Property, _ value: String) {
+    if let id = activePanadapter?.id, let waterfallId = panadapters[id: id]?.waterfallId, let waterfall = waterfalls[id: waterfallId] {
+      switch property {
+      case .autoBlackEnabled:   waterfall.autoBlackEnabled = value == "1" ? true : false
+      case .gradientIndex:      waterfall.gradientIndex = Int(value) ?? 0
+      default:              return
+      }
+    }
   }
 
   // ----------------------------------------------------------------------------
@@ -811,8 +870,8 @@ public final class ApiModel: ObservableObject {
       case station
     }
     
-    // if handle is mine, this client is fully initialized
-    if handle == radio?.connectionHandle { clientInitialized = true }
+//    // if handle is mine, this client is fully initialized
+//    if handle == radio?.connectionHandle { clientInitialized = true }
     
     // parse remaining properties
     for property in properties.dropFirst(2) {
