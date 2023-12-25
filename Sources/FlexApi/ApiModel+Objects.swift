@@ -439,7 +439,7 @@ extension ApiModel {
     
     if let originalPacket = ApiModel.shared.activePacket, let packet = Listener.shared.packets[id: originalPacket.serial + originalPacket.publicIp] {
       // is this GuiClient already in GuiClients?
-      if var myGuiClient = packet.guiClients[id: handle] {
+      if let myGuiClient = packet.guiClients[id: handle] {
         // YES, are all fields populated?
         if !clientId.isEmpty && !program.isEmpty && !station.isEmpty {
           // the fields are populated
@@ -449,6 +449,13 @@ extension ApiModel {
           myGuiClient.program = program
           myGuiClient.station = station
           myGuiClient.isLocalPtt = isLocalPtt
+          
+          Listener.shared.guiClients[id: handle] = myGuiClient
+          
+          if !_isGui && station == "K3TZR" {
+             boundClientId = clientId
+            sendCommand("client bind client_id=\(boundClientId!)")
+          }
           
           Listener.shared.sendGuiClientCompletion(myGuiClient)
         }
@@ -467,6 +474,14 @@ extension ApiModel {
         
         if !clientId.isEmpty && !program.isEmpty && !station.isEmpty {
           // the fields are populated
+
+          Listener.shared.guiClients[id: handle] = guiClient
+
+          if !_isGui && handle == connectionHandle {
+             boundClientId = clientId
+            sendCommand("client bind client_id=\(boundClientId!)")
+          }
+
           Listener.shared.sendGuiClientCompletion(guiClient)
         }
       }

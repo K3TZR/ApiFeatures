@@ -154,7 +154,13 @@ extension LocalListener: GCDAsyncUdpSocketDelegate {
       
       if _settingsModel.logBroadcasts { checkPayloadNulls(payloadData) }
       
-      return Packet.populate( payloadData.keyValuesArray() )
+//      return Packet.populate( payloadData.keyValuesArray() )
+      let packet = Packet.populate( payloadData.keyValuesArray() )
+
+//      for guiClient in packet.guiClients {
+//        _listener.guiClients[id: guiClient.id] = guiClient
+//      }
+      return packet
     }
     return nil
   }

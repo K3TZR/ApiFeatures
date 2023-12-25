@@ -217,8 +217,16 @@ public final class ApiModel {
   ///   - program: program name
   ///   - testerMode: whether Tester is active
   @MainActor
-  public func connect(packet: Packet, isGui: Bool, disconnectHandle: UInt32?, programName: String = "Sdr6000", stationName: String = "K3TZR", mtuValue: Int = 1_300) async throws {
+  public func connect(pickerSelection: String, isGui: Bool, disconnectHandle: UInt32?, programName: String, stationName: String, mtuValue: Int) async throws {
+    var packet: Packet
+    var station = ""
     
+    if isGui {
+      packet = _listener.packets[id: pickerSelection]!
+    } else {
+      packet = _listener.stations[id: pickerSelection]!.packet
+      station = _listener.stations[id: pickerSelection]!.station
+    }
     nthPingReceived = false
     
     _isGui = isGui
@@ -246,8 +254,8 @@ public final class ApiModel {
     // is this a Wan connection?
     if packet.source == .smartlink {
       // YES, send Wan Connect message & wait for the reply
-      _wanHandle = try await withTimeout(seconds: 2.0, errorToThrow: ApiError.statusTimeout) { [self] in 
-        try await _listener.smartlinkConnect(for: packet.serial, holePunchPort: packet.negotiatedHolePunchPort)
+      _wanHandle = try await withTimeout(seconds: 2.0, errorToThrow: ApiError.statusTimeout) { [self, serial = packet.serial, negotiatedHolePunchPort = packet.negotiatedHolePunchPort] in
+        try await _listener.smartlinkConnect(for: serial, holePunchPort: negotiatedHolePunchPort)
       }
       
       log("Api: wanHandle received", .debug, #function, #file, #line)
@@ -296,6 +304,7 @@ public final class ApiModel {
     }
     
     activePacket = packet
+    activeStation = station
   }
 
   /// Disconnect the current Radio and remove all its objects / references
@@ -322,6 +331,7 @@ public final class ApiModel {
     Tcp.shared.disconnect()
     
     activePacket = nil
+    activeStation = nil
     
     // remove all of radio's objects
     removeAllObjects()

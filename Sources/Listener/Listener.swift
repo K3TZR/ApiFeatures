@@ -23,6 +23,9 @@ final public class Listener: Equatable {
   // MARK: - Public Properties
   
   public var packets = IdentifiedArrayOf<Packet>()
+  public var stations = IdentifiedArrayOf<Station>()
+  public var guiClients = IdentifiedArrayOf<GuiClient>()
+  
   public var smartlinkTestResult = SmartlinkTestResult()
   
   public var clientStream: AsyncStream<ClientEvent> {
@@ -148,11 +151,11 @@ final public class Listener: Equatable {
     _smartlinkListener?.sendTlsCommand("application disconnect_users serial=\(serial) handle=\(handle.hex)")
   }
   
-  public func findPacket(for guiDefault: SettingsModel.DefaultConnection?, _ nonGuiDefault: SettingsModel.DefaultConnection?, _ isGui: Bool) -> Packet? {
+  public func findSelection(for guiDefault: SettingsModel.DefaultConnection?, _ nonGuiDefault: SettingsModel.DefaultConnection?, _ isGui: Bool) -> String? {
     if isGui {
       guard guiDefault != nil else { return nil }
       for packet in packets where packet.serial == guiDefault!.serial && packet.source.rawValue == guiDefault!.source {
-        return packet
+        return packet.serial + packet.publicIp
       }
       
     } else {
@@ -161,7 +164,7 @@ final public class Listener: Equatable {
       for packet in packets where packet.serial == nonGuiDefault!.serial
       && packet.source.rawValue == nonGuiDefault!.source
       && packet.guiClients.map({ $0.station }).contains(nonGuiDefault!.station!) {
-        return packet
+        return packet.serial + packet.publicIp + nonGuiDefault!.station!
       }
     }
     return nil
@@ -190,16 +193,17 @@ final public class Listener: Equatable {
     // is it a Packet that has been seen previously?
     if let oldPacket = packets[id: newPacket.serial + newPacket.publicIp] {
       // KNOWN PACKET
-      
-      if newPacket != oldPacket {
-        // CHANGED KNOWN packet
-        updatePacketData(oldPacket, newPacket)
-        log("\(newPacket.source == .local ? "Local" : "Smartlink") Listener: CHANGED packet, \(newPacket.nickname), \(newPacket.serial)", .info, #function, #file, #line)
-        
-      } else {
-        // UN-CHANGED KNOWN packet (timestamp update)
-        packets[id: newPacket.serial + newPacket.publicIp] = newPacket
-      }
+      updatePacketData(oldPacket, newPacket)
+
+//      if newPacket != oldPacket {
+//        // CHANGED KNOWN packet
+//        updatePacketData(oldPacket, newPacket)
+//        log("\(newPacket.source == .local ? "Local" : "Smartlink") Listener: CHANGED packet, \(newPacket.nickname), \(newPacket.serial)", .info, #function, #file, #line)
+//        
+//      } else {
+//        // UN-CHANGED KNOWN packet (timestamp update)
+//        packets[id: newPacket.serial + newPacket.publicIp] = newPacket
+//      }
       
     } else {
       // UNKNOWN packet
@@ -215,6 +219,11 @@ final public class Listener: Equatable {
     // identify GuiClient changes
     if oldPacket == nil {
       for guiClient in newPacket.guiClients {
+        
+        stations.append(Station(packet: newPacket, station: guiClient.station))
+
+        guiClients[id: guiClient.handle] = guiClient
+        
         _clientStream( ClientEvent(.added, client: guiClient))
         log("Listener: guiClient ADDED, \(guiClient.station)", .info, #function, #file, #line)
       }
@@ -224,18 +233,32 @@ final public class Listener: Equatable {
         
         for guiClient in newPacket.guiClients {
           if !oldPacket!.guiClients.contains(guiClient){
+            
+            stations.append(Station(packet: newPacket, station: guiClient.station))
+
+            guiClients[id: guiClient.handle] = guiClient
+
             _clientStream( ClientEvent(.added, client: guiClient))
             log("Listener: guiClient ADDED, \(guiClient.station)", .info, #function, #file, #line)
           }
         }
         for guiClient in oldPacket!.guiClients {
           if !newPacket.guiClients.contains(guiClient){
+            
+            stations.remove(id: oldPacket!.serial + oldPacket!.publicIp + guiClient.station)
+            
+            guiClients.remove(id: guiClient.handle)
+
             _clientStream( ClientEvent(.removed, client: guiClient))
             log("Listener: guiClient REMOVED, \(guiClient.station)", .info, #function, #file, #line)
           }
         }
       }
     }
+    
+//    for station in stations {
+//      print("----->>>>> Station ", station.packet.nickname, station.station)
+//    }
   }
   
   
